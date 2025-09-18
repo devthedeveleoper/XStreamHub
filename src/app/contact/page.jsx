@@ -16,10 +16,10 @@ const ContactPage = () => {
                             <strong>Admin:</strong> For direct inquiries, you can contact the admin at <a href="mailto:kalluhalwai@aurahub.fun" className="text-blue-600 hover:underline">divyansh@aurahub.fun</a>.
                         </p>
                         <p className="text-gray-700">
-                            <strong>Support:</strong> For technical issues or help with your account, please email us at <a href="mailto:support@aurahub.com" className="text-blue-600 hover:underline">support@aurahub.com</a>.
+                            <strong>Support:</strong> For technical issues or help with your account, please email us at <a href="mailto:support@aurahub.fun" className="text-blue-600 hover:underline">support@aurahub.fun</a>.
                         </p>
                         <p className="text-gray-700">
-                            <strong>Report Issues:</strong> To report a bug or inappropriate content, contact us at <a href="mailto:report@aurahub.com" className="text-blue-600 hover:underline">report@aurahub.com</a>.
+                            <strong>Report Issues:</strong> To report a bug or inappropriate content, contact us at <a href="mailto:report@aurahub.fun" className="text-blue-600 hover:underline">report@aurahub.fun</a>.
                         </p>
                         <p className="text-gray-700">
                             <strong>Location:</strong> Aurahub HQ, Kota, Rajasthan, India.

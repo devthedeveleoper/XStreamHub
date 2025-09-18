@@ -16,11 +16,16 @@ export async function GET(request, { params }) {
 
         const playlist = await Playlist.findById(id).populate({
             path: 'videos',
+            match: { visibility: { $in: ['public', 'unlisted'] } },
             populate: {
                 path: 'uploader',
                 select: 'username'
             }
         });
+
+        if (playlist) {
+            playlist.videos = playlist.videos.filter(video => video !== null);
+        }
 
         if (!playlist) {
             return NextResponse.json({ message: 'Playlist not found' }, { status: 404 });

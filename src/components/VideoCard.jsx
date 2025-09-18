@@ -20,8 +20,7 @@ const VideoCard = ({ video }) => {
         <Link href={`/video/${video._id}`} className="block group">
             <div className="flex flex-col gap-2">
                 <VideoThumbnail
-                    customThumbnailUrl={video.thumbnailUrl}
-                    fileId={video.fileId}
+                    videoId={video._id}
                     altText={video.title}
                 />
                 <div className="flex gap-3 mt-2">

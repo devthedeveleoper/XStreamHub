@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Video from '@/models/Video';
+import Playlist from '@/models/Playlist';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import axios from 'axios';
@@ -23,6 +24,12 @@ export async function POST(request) {
         const thumbnailFile = formData.get("thumbnailFile");
         const category = formData.get('category');
         const tagsString = formData.get('tags');
+        const visibility = formData.get('visibility');
+        const playlistId = formData.get('playlistId');
+
+        if (!title || !description || !videoId) {
+            return NextResponse.json({ message: "Title, description, and videoId are required." }, { status: 400 });
+        }
 
         const tags = tagsString ? JSON.parse(tagsString) : [];
 
@@ -33,6 +40,7 @@ export async function POST(request) {
             uploader: session.user.id,
             category: category,
             tags: tags,
+            visibility: visibility,
         };
 
         if (thumbnailFile) {
@@ -61,6 +69,13 @@ export async function POST(request) {
 
         const newVideo = new Video(videoData);
         await newVideo.save();
+
+        if (playlistId) {
+            await Playlist.updateOne(
+                { _id: playlistId, owner: session.user.id },
+                { $push: { videos: newVideo._id } }
+            );
+        }
 
         return NextResponse.json(
             { message: "Video published successfully!", video: newVideo },

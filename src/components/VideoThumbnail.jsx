@@ -1,70 +1,64 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Image from "next/image";
+"use client";
 
-const FALLBACK_IMAGE_URL = "https://i.ibb.co/hRHpLpv3/luffy-crying.gif";
+import React, { useState, useEffect } from 'react';
+import API from '@/lib/api';
+import Image from 'next/image';
 
-const VideoThumbnail = ({ fileId, customThumbnailUrl, altText }) => {
-  const [imageUrl, setImageUrl] = useState(
-    customThumbnailUrl || FALLBACK_IMAGE_URL
-  );
-  const [isLoading, setIsLoading] = useState(!customThumbnailUrl);
+const FALLBACK_IMAGE_URL = 'https://iili.io/Ku93A2n.png';
 
-  useEffect(() => {
-    if (customThumbnailUrl) {
-      setImageUrl(customThumbnailUrl);
-      setIsLoading(false);
-      return;
+const VideoThumbnail = ({ videoId, altText }) => {
+    const [imageUrl, setImageUrl] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchThumbnail = async () => {
+            if (!videoId) {
+                if (isMounted) {
+                    setImageUrl(FALLBACK_IMAGE_URL);
+                    setIsLoading(false);
+                }
+                return;
+            }
+            try {
+                const response = await API.get(`/videos/${videoId}/thumbnail`);
+                if (isMounted) {
+                    setImageUrl(response.data.thumbnailUrl);
+                }
+
+            } catch (error) {
+                console.error(`Could not fetch thumbnail for ${videoId}, using fallback.`);
+                if (isMounted) {
+                    setImageUrl(FALLBACK_IMAGE_URL);
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchThumbnail();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [videoId]);
+
+    if (isLoading) {
+        return <div className="w-full h-full bg-gray-300 animate-pulse rounded-lg"></div>;
     }
 
-    let isMounted = true;
-    const fetchThumbnail = async () => {
-      try {
-        const response = await axios.get(
-          `https://api.aurahub.fun/fs/files/thumbnail/${fileId}`
-        );
-        if (isMounted && response.data?.thumbnail_url) {
-          setImageUrl(response.data.thumbnail_url);
-        } else if (isMounted) {
-          setImageUrl(FALLBACK_IMAGE_URL);
-        }
-      } catch (error) {
-        console.log(
-          `Could not fetch thumbnail for ${fileId}, using fallback.`
-        );
-        if (isMounted) {
-          setImageUrl(FALLBACK_IMAGE_URL);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchThumbnail();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fileId, customThumbnailUrl]);
-
-  if (isLoading) {
     return (
-      <div className="w-full h-full bg-gray-300 animate-pulse rounded-lg"></div>
+        <Image
+            src={imageUrl || FALLBACK_IMAGE_URL}
+            alt={altText}
+            width={500}
+            height={300}
+            onError={() => setImageUrl(FALLBACK_IMAGE_URL)}
+            className="w-full h-full object-cover rounded-lg"
+        />
     );
-  }
-
-  return (
-    <Image
-      src={imageUrl}
-      alt={altText}
-      width={500}
-      height={300}
-      onError={() => setImageUrl(FALLBACK_IMAGE_URL)}
-      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
-    />
-  );
 };
 
 export default VideoThumbnail;

@@ -6,7 +6,6 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CATEGORIES from "@/constants/categories";
 
-
 const formatBytes = (bytes, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -37,16 +36,32 @@ const UploadForm = () => {
   const videoFileRef = useRef(null);
   
   const [uploadType, setUploadType] = useState("direct");
-  const [statusMessage, setStatusMessage] = useState("");
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSpeed, setUploadSpeed] = useState("");
   const [eta, setEta] = useState("");
-
+  
   const [isPolling, setIsPolling] = useState(false);
   const [remoteProgress, setRemoteProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
   const pollingIntervalRef = useRef(null);
+
+  const [visibility, setVisibility] = useState("public");
+  const [playlists, setPlaylists] = useState([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+        try {
+            const response = await API.get('/playlists/my-playlists');
+            setPlaylists(response.data);
+        } catch (error) {
+            console.error("Could not fetch playlists", error);
+        }
+    };
+    fetchPlaylists();
+  }, []);
 
   const createFinalRecord = async (videoId) => {
     toast.info("Publishing video...");
@@ -55,6 +70,10 @@ const UploadForm = () => {
     finalFormData.append("description", description);
     finalFormData.append("videoId", videoId);
     finalFormData.append("category", category);
+    finalFormData.append("visibility", visibility);
+    if (selectedPlaylist) {
+      finalFormData.append("playlistId", selectedPlaylist);
+    }
     const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     finalFormData.append("tags", JSON.stringify(tagsArray));
 
@@ -70,25 +89,19 @@ const UploadForm = () => {
   const handleDirectUpload = async (e) => {
     e.preventDefault();
     const videoFile = videoFileRef.current?.files?.[0];
-
     if (!videoFile || !title) {
       toast.error("Please provide a title and a video file.");
       return;
     }
-
     setIsUploading(true);
     setUploadProgress(0);
     setUploadSpeed('');
     setEta('');
-    setStatusMessage("");
     const startTime = Date.now();
-
     try {
       const { data: { url: uploadUrl } } = await API.get("/videos/get-upload-url");
-      
       const videoFormData = new FormData();
       videoFormData.append("file", videoFile);
-
       const response = await axios.post(uploadUrl, videoFormData, {
         onUploadProgress: (progressEvent) => {
             const { loaded, total } = progressEvent;
@@ -104,15 +117,12 @@ const UploadForm = () => {
             }
         },
       });
-
       const uploadResult = response.data;
       if (uploadResult.status !== 200) {
         throw new Error(uploadResult.msg || "Video upload failed");
       }
-      
       const videoId = uploadResult.result.id;
       await createFinalRecord(videoId);
-      
     } catch (error) {
       toast.error("Upload failed. Please try again.");
       console.error("Upload failed:", error);
@@ -120,40 +130,28 @@ const UploadForm = () => {
       setIsUploading(false);
     }
   };
-
+  
   const handleRemoteUpload = async (e) => {
     e.preventDefault();
     if (!videoUrl || !title) {
       toast.error("Please provide a video URL and a title.");
       return;
     }
-
     setIsPolling(true);
     setRemoteProgress(0);
     setStatusMessage("Queuing remote upload...");
-
     try {
       const startResponse = await API.post("/videos/remote-upload/start", { videoUrl });
       const remoteId = startResponse.data.id;
-
-      if (!remoteId) {
-        throw new Error("Failed to get remote upload ID from server.");
-      }
-
+      if (!remoteId) throw new Error("Failed to get remote upload ID from server.");
       setStatusMessage(`Upload queued. Polling status...`);
-
       let failedAttempts = 0;
-      const maxFailedAttempts = 100;
-
+      const maxFailedAttempts = 5;
       pollingIntervalRef.current = setInterval(async () => {
         try {
-            const statusResponse = await API.get(`/videos/remote-upload/status`, {
-                params: { id: remoteId }
-            });
-
+            const statusResponse = await API.get(`/videos/remote-upload/status`, { params: { id: remoteId } });
             failedAttempts = 0;
             const statusData = statusResponse.data[remoteId];
-
             if (statusData && statusData.status === "finished") {
                 if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
                 setRemoteProgress(100);
@@ -161,7 +159,6 @@ const UploadForm = () => {
                 const videoId = statusData.linkid;
                 toast.success("Remote download finished! Publishing video...");
                 await createFinalRecord(videoId);
-
             } else if (statusData && statusData.status === "error") {
                 if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
                 setIsPolling(false);
@@ -177,7 +174,6 @@ const UploadForm = () => {
              failedAttempts++;
              console.log(`Status check attempt ${failedAttempts} failed. Retrying...`);
              setStatusMessage(`Waiting for upload to initialize... (Attempt ${failedAttempts})`);
-
              if (failedAttempts >= maxFailedAttempts) {
                 if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
                 setIsPolling(false);
@@ -185,8 +181,7 @@ const UploadForm = () => {
                 console.error("Status check failed:", statusError);
              }
         }
-      }, 30000);
-
+      }, 5000);
     } catch (error) {
       toast.error("Remote upload failed. Please check the URL and try again.");
       console.error("Remote upload initiation failed:", error);
@@ -202,9 +197,8 @@ const UploadForm = () => {
     };
   }, []);
 
-
   return (
-    <div className="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div className="bg-gray-100 flex items-center justify-center min-h-screen py-12">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Upload a New Video 🎬
@@ -247,20 +241,6 @@ const UploadForm = () => {
             </div>
 
             <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select 
-                    id="category" 
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                >
-                    {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                </select>
-            </div>
-
-            <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea id="description" placeholder="A short description of your video..." value={description} onChange={(e) => setDescription(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 h-24 resize-none"/>
             </div>
@@ -274,6 +254,30 @@ const UploadForm = () => {
                     accept="image/*" 
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div>
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        {CATEGORIES.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="playlist" className="block text-sm font-medium text-gray-700 mb-1">Add to Playlist (Optional)</label>
+                    <select id="playlist" value={selectedPlaylist} onChange={(e) => setSelectedPlaylist(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        <option value="">None</option>
+                        {playlists.map(p => <option key={p._id} value={p._id}>{p.title}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                    <select id="visibility" value={visibility} onChange={(e) => setVisibility(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        <option value="public">Public</option>
+                        <option value="unlisted">Unlisted</option>
+                        <option value="private">Private</option>
+                    </select>
+                </div>
             </div>
 
             {uploadType === 'direct' ? (
@@ -320,7 +324,7 @@ const UploadForm = () => {
                 </div>
             )}
 
-            <button type="submit" disabled={isPolling || isUploading} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isUploading || isPolling} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                 {isUploading ? `Uploading... (${uploadProgress}%)` : isPolling ? "Processing..." : "Upload Video"}
             </button>
         </form>

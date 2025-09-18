@@ -19,7 +19,7 @@ export async function GET(request) {
             return NextResponse.json([]);
         }
         
-        const videos = await Video.find({ uploader: { $in: user.subscriptions } })
+        const videos = await Video.find({ uploader: { $in: user.subscriptions }, visibility: 'public' })
             .sort({ createdAt: -1 })
             .populate('uploader', 'username avatar');
 
