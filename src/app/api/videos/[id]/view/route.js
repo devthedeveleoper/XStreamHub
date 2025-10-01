@@ -1,28 +1,32 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Video from "@/models/Video";
-import mongoose from "mongoose";
+import UserActivity from "@/models/UserActivity";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(request, { params }) {
   await dbConnect();
   try {
     const { id } = await params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { message: "Invalid video ID format." },
-        { status: 400 }
+    await Video.findByIdAndUpdate(id, { $inc: { views: 1 } });
+
+    const session = await getServerSession(authOptions);
+    const user = session?.user;
+
+    if (user) {
+      await UserActivity.updateOne(
+        { userId: user.id, videoId: id, interactionType: "view" },
+        { $set: { updatedAt: new Date() } },
+        { upsert: true }
       );
     }
-    await Video.findByIdAndUpdate(id, { $inc: { views: 1 } });
-    return NextResponse.json({
-      success: true,
-      message: "View count incremented.",
-    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error incrementing view count:", error);
     return NextResponse.json({
       success: false,
-      message: "Could not increment view count.",
+      message: "Could not count view.",
     });
   }
 }

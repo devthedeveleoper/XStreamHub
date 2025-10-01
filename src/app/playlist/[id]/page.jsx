@@ -55,8 +55,7 @@ const ViewPlaylistPage = () => {
                             <span className="text-lg font-semibold text-gray-400 w-8 text-center">{index + 1}</span>
                             <div className="w-40 h-24 flex-shrink-0">
                                 <VideoThumbnail 
-                                    fileId={video.fileId}
-                                    customThumbnailUrl={video.thumbnailUrl}
+                                    videoId={video._id}
                                     altText={video.title}
                                 />
                             </div>

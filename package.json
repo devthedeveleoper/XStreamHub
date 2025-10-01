@@ -1,5 +1,5 @@
 {
-  "name": "xstreamhub",
+  "name": "aurahub",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,6 +12,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@hookform/resolvers": "^5.2.1",
+    "@upstash/qstash": "^2.8.3",
     "@upstash/redis": "^1.35.3",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",

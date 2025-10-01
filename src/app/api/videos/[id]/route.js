@@ -91,9 +91,10 @@ export async function PUT(request, { params }) {
     }
 
     const body = await request.json();
-    const { title, description } = body;
-    video.title = title || video.title;
-    video.description = description || video.description;
+    const { title, description, visibility } = body;
+    if (title) video.title = title;
+    if (description) video.description = description;
+    if (visibility) video.visibility = visibility;
     const updatedVideo = await video.save();
     return NextResponse.json(updatedVideo);
   } catch (error) {

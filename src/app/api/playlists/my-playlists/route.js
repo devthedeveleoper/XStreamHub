@@ -4,7 +4,6 @@ import Playlist from '@/models/Playlist';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-// GET: Fetch all of the user's playlists
 export async function GET(request) {
     await dbConnect();
     try {
@@ -14,7 +13,7 @@ export async function GET(request) {
         }
 
         const playlists = await Playlist.find({ owner: session.user.id })
-            .sort({ updatedAt: -1 });
+            .sort({ updatedAt: -1 }).populate('videos');
 
         return NextResponse.json(playlists);
     } catch (error) {
@@ -23,7 +22,6 @@ export async function GET(request) {
     }
 }
 
-// POST: Create a new playlist
 export async function POST(request) {
     await dbConnect();
     try {
@@ -51,7 +49,6 @@ export async function POST(request) {
     }
 }
 
-// PUT: Update a playlist (e.g., title, privacy status)
 export async function PUT(request) {
     await dbConnect();
     try {

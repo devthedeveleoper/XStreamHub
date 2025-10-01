@@ -3,22 +3,52 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import API from '@/lib/api';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import VideoThumbnail from '@/components/VideoThumbnail';
 
 const SortableVideoItem = ({ video, onRemove }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: video._id });
-    const style = { transform: CSS.Transform.toString(transform), transition };
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: video._id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
 
     return (
-        <li ref={setNodeRef} style={style} className="flex items-center space-x-3 p-2 bg-gray-50 rounded border">
+        <li
+            ref={setNodeRef}
+            style={style}
+            className="flex items-center space-x-3 p-2 bg-gray-50 rounded border"
+        >
             <span {...attributes} {...listeners} className="text-gray-400 cursor-grab touch-none">☰</span>
             <div className="w-20 h-12 flex-shrink-0">
-                 <VideoThumbnail fileId={video.fileId} customThumbnailUrl={video.thumbnailUrl} altText={video.title} />
+                 <VideoThumbnail
+                    videoId={video._id}
+                    altText={video.title}
+                />
             </div>
             <div className="flex-grow w-0">
                 <Link href={`/video/${video._id}`} className="font-semibold hover:underline truncate text-sm">{video.title}</Link>
@@ -50,7 +80,12 @@ const EditPlaylistPage = () => {
         fetchPlaylistDetails();
     }, [playlistId]);
 
-    const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -71,11 +106,28 @@ const EditPlaylistPage = () => {
         try {
             await API.put('/playlists', { playlistId, videoId });
             setPlaylist(prev => ({...prev, videos: prev.videos.filter(v => v._id !== videoId) }));
-        } catch (error) { toast.error("Failed to remove video."); }
+            toast.success("Video removed from playlist.");
+        } catch (error) { 
+            toast.error("Failed to remove video."); 
+        }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (!playlist) return <div>Playlist not found.</div>;
+    if (loading) {
+        return (
+            <main className="container mx-auto px-6 py-8 animate-pulse">
+                <div className="h-6 bg-gray-300 rounded w-1/4 mb-4"></div>
+                <div className="h-10 bg-gray-300 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/5 mb-6"></div>
+                <div className="max-w-2xl space-y-2">
+                    <div className="h-16 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-gray-200 rounded"></div>
+                </div>
+            </main>
+        );
+    }
+    
+    if (!playlist) return <div className="text-center p-10">Playlist not found.</div>;
 
     return (
         <main className="container mx-auto px-6 py-8">
@@ -92,7 +144,7 @@ const EditPlaylistPage = () => {
                         </ul>
                     </SortableContext>
                 </DndContext>
-                 {playlist.videos.length === 0 && <p className="text-center text-gray-500">This playlist is empty.</p>}
+                 {playlist.videos.length === 0 && <p className="mt-4 text-center text-gray-500">This playlist is empty. Add videos by clicking the "Save" button on a video page.</p>}
             </div>
         </main>
     );
