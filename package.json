@@ -1,5 +1,5 @@
 {
-  "name": "xtreamhub",
+  "name": "aurahub",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -26,6 +26,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "react-icons": "^5.5.0",
+    "react-image-crop": "^11.0.10",
     "react-intersection-observer": "^9.16.0",
     "react-toastify": "^11.0.5",
     "yup": "^1.7.0",
