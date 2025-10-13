@@ -14,6 +14,7 @@ import VideoPlayerSkeleton from "@/components/VideoPlayerSkeleton";
 import Comment from "@/components/Comment";
 import SaveToPlaylistModal from "@/components/SaveToPlaylistModal";
 import { useInView } from "react-intersection-observer";
+import { FaClock, FaCheck } from "react-icons/fa";
 
 const VideoPlayerPage = () => {
   const params = useParams();
@@ -35,6 +36,8 @@ const VideoPlayerPage = () => {
   const [sidebarPage, setSidebarPage] = useState(1);
   const [hasMoreSidebarVideos, setHasMoreSidebarVideos] = useState(false);
   const [loadingSidebar, setLoadingSidebar] = useState(true);
+
+  const [inWatchLater, setInWatchLater] = useState(false);
 
   const { ref, inView } = useInView({ threshold: 0.5 });
 
@@ -98,6 +101,21 @@ const VideoPlayerPage = () => {
     };
 
     fetchInitialData();
+
+    const checkWatchLaterStatus = async () => {
+      if (isAuthenticated) {
+        try {
+          const res = await API.get("/user/watch-later");
+          const isSaved = res.data.some((item) => item.videoId._id === id);
+          setInWatchLater(isSaved);
+        } catch (error) {
+          console.error("Failed to check watch later status");
+        }
+      }
+    };
+
+    checkWatchLaterStatus();
+
     window.scrollTo(0, 0);
   }, [id, fetchSidebarVideos]);
 
@@ -215,6 +233,25 @@ const VideoPlayerPage = () => {
     );
   };
 
+  const handleToggleWatchLater = async () => {
+    if (!isAuthenticated) {
+      toast.warn("Please log in to save videos.");
+      return;
+    }
+    try {
+      if (inWatchLater) {
+        await API.delete(`/user/watch-later?videoId=${id}`);
+        toast.success("Removed from Watch Later");
+      } else {
+        await API.post("/user/watch-later", { videoId: id });
+        toast.success("Added to Watch Later");
+      }
+      setInWatchLater(!inWatchLater);
+    } catch (error) {
+      toast.error("An error occurred.");
+    }
+  };
+
   if (loading || status === "loading") {
     return (
       <div className="bg-gray-50 min-h-screen">
@@ -295,6 +332,23 @@ const VideoPlayerPage = () => {
                       <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
                     </svg>
                     <span>Save</span>
+                  </button>
+                )}
+                {isAuthenticated && (
+                  <button
+                    onClick={handleToggleWatchLater}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-full font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  >
+                    {inWatchLater ? (
+                      <>
+                        <FaCheck className="text-green-500" />{" "}
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaClock /> <span>Watch Later</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

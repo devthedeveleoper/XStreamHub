@@ -15,7 +15,7 @@ export async function GET(request) {
         const userId = session.user.id;
 
         const notifications = await Notification.find({ recipient: userId })
-            .populate('sender', 'username')
+            .populate('sender', 'username avatar')
             .populate('video', 'title')
             .sort({ createdAt: -1 })
             .limit(20);
@@ -46,4 +46,20 @@ export async function POST(request) {
         console.error("Error marking notifications as read:", error);
         return NextResponse.json({ message: 'Server error' }, { status: 500 });
     }
+}
+
+export async function DELETE(request) {
+  await dbConnect();
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+    await Notification.deleteMany({ recipient: session.user.id });
+
+    return NextResponse.json({ message: "All notifications cleared" });
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
 }
