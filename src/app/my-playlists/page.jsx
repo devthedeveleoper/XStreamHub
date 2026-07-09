@@ -117,37 +117,37 @@ const MyPlaylistsPage = () => {
                 />
             )}
             <main className="container mx-auto px-6 py-8">
-                <h1 className="text-3xl font-bold mb-6">My Playlists</h1>
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white font-display tracking-tight mb-6">My Playlists</h1>
                 
-                <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-                    <form onSubmit={handleCreatePlaylist} className="flex flex-col sm:flex-row items-center gap-2">
-                        <input name="title" type="text" placeholder="Create new playlist..." className="flex-grow w-full sm:w-auto p-2 border rounded-md"/>
-                        <button type="submit" className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md font-semibold">Create</button>
+                <div className="mb-8 p-6 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
+                    <form onSubmit={handleCreatePlaylist} className="flex flex-col sm:flex-row items-center gap-3">
+                        <input name="title" type="text" placeholder="Create new playlist..." className="flex-grow w-full sm:w-auto px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"/>
+                        <button type="submit" className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm transition-colors">Create</button>
                     </form>
                 </div>
                 
                 {playlists.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {playlists.map(playlist => (
-                            <div key={playlist._id} className="bg-white rounded-lg shadow-md p-4 group flex flex-col justify-between">
+                            <div key={playlist._id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-gray-100 dark:border-slate-700 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:shadow-lg p-5 group flex flex-col justify-between transition-all duration-300">
                                 <div>
                                     <div className="flex items-start justify-between">
-                                        <h2 className="text-lg font-bold truncate pr-2">{playlist.title}</h2>
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white font-display tracking-tight truncate pr-2">{playlist.title}</h2>
                                         {playlist.isPublic ? (
                                             <FaGlobeAsia title="Public" className="h-4 w-4 text-gray-400 flex-shrink-0" />
                                         ) : (
                                             <FaLock title="Private" className="h-4 w-4 text-gray-400 flex-shrink-0" />
                                         )}
                                     </div>
-                                    <p className="text-sm text-gray-500 mt-1">{playlist.videos.length} videos</p>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{playlist.videos.length} videos</p>
                                 </div>
-                                <div className="mt-4 flex items-center justify-between">
-                                    <Link href={`/playlist/${playlist._id}/edit`} className="text-sm font-semibold text-blue-600 hover:underline">Manage</Link>
-                                    <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleShare(playlist._id)} className="text-xs text-gray-400 hover:text-blue-600">Share</button>
-                                        <button onClick={() => handlePrivacyToggle(playlist)} className="text-xs text-gray-400 hover:text-blue-600">{playlist.isPublic ? 'Make Private' : 'Make Public'}</button>
-                                        <button onClick={() => setEditingPlaylist(playlist)} className="text-xs text-gray-400 hover:text-blue-600">Rename</button>
-                                        <button onClick={() => handleDeletePlaylist(playlist._id)} className="text-gray-400 hover:text-red-500">
+                                <div className="mt-6 flex items-center justify-between">
+                                    <Link href={`/playlist/${playlist._id}/edit`} className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors">Manage</Link>
+                                    <div className="flex items-center space-x-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleShare(playlist._id)} className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Share</button>
+                                        <button onClick={() => handlePrivacyToggle(playlist)} className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{playlist.isPublic ? 'Make Private' : 'Make Public'}</button>
+                                        <button onClick={() => setEditingPlaylist(playlist)} className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Rename</button>
+                                        <button onClick={() => handleDeletePlaylist(playlist._id)} className="text-gray-400 dark:text-gray-500 hover:text-rose-500 dark:hover:text-rose-500 transition-colors">
                                             <FaTrash />
                                         </button>
                                     </div>
@@ -156,9 +156,9 @@ const MyPlaylistsPage = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center p-10 border rounded-lg">
-                        <h2 className="text-xl font-semibold">No playlists found</h2>
-                        <p className="text-gray-600 mt-2">Create your first playlist to get started.</p>
+                    <div className="text-center p-12 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">No playlists found</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first playlist to get started.</p>
                     </div>
                 )}
             </main>

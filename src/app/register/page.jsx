@@ -163,23 +163,23 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center">Create an Account</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 px-4 py-12">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 animate-in fade-in duration-300">
+        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">Create an Account</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Username
             </label>
-            <div className="relative">
+            <div className="relative mt-1">
               <input
                 id="username"
                 {...register("username")}
-                className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-                  errors.username ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10 bg-white dark:bg-slate-900 text-gray-900 dark:text-white transition-all ${
+                  errors.username ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
                 }`}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -187,25 +187,25 @@ const RegisterPage = () => {
                   <FaSpinner className="animate-spin text-gray-400" />
                 )}
                 {usernameStatus.message === "Username is available!" && (
-                  <FaCheckCircle className="text-green-500" />
+                  <FaCheckCircle className="text-emerald-500" />
                 )}
                 {usernameStatus.message &&
                   usernameStatus.message !== "Username is available!" &&
                   !errors.username && (
-                    <FaTimesCircle className="text-red-500" />
+                    <FaTimesCircle className="text-rose-500" />
                   )}
               </div>
             </div>
             {errors.username ? (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
                 {errors.username.message}
               </p>
             ) : (
               <p
                 className={`text-xs mt-1 h-4 ${
                   usernameStatus.message === "Username is available!"
-                    ? "text-green-600"
-                    : "text-red-600"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
                 }`}
               >
                 {usernameStatus.message}
@@ -215,17 +215,17 @@ const RegisterPage = () => {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Email
             </label>
-            <div className="relative">
+            <div className="relative mt-1">
               <input
                 id="email"
                 type="email"
                 {...register("email")}
-                className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-                  errors.email ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10 bg-white dark:bg-slate-900 text-gray-900 dark:text-white transition-all ${
+                  errors.email ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
                 }`}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -233,23 +233,23 @@ const RegisterPage = () => {
                   <FaSpinner className="animate-spin text-gray-400" />
                 )}
                 {emailStatus.message === "Email is available!" && (
-                  <FaCheckCircle className="text-green-500" />
+                  <FaCheckCircle className="text-emerald-500" />
                 )}
                 {emailStatus.message &&
                   emailStatus.message !== "Email is available!" &&
-                  !errors.email && <FaTimesCircle className="text-red-500" />}
+                  !errors.email && <FaTimesCircle className="text-rose-500" />}
               </div>
             </div>
             {errors.email ? (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
                 {errors.email.message}
               </p>
             ) : (
               <p
                 className={`text-xs mt-1 h-4 ${
                   emailStatus.message === "Email is available!"
-                    ? "text-green-600"
-                    : "text-red-600"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
                 }`}
               >
                 {emailStatus.message}
@@ -259,17 +259,17 @@ const RegisterPage = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Password
             </label>
-            <div className="relative">
+            <div className="relative mt-1">
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
-                className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-                  errors.password ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10 bg-white dark:bg-slate-900 text-gray-900 dark:text-white transition-all ${
+                  errors.password ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
                 }`}
               />
               <button
@@ -282,7 +282,7 @@ const RegisterPage = () => {
             </div>
             <PasswordStrength password={passwordValue || ""} />
             {errors.password && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
                 {errors.password.message}
               </p>
             )}
@@ -290,17 +290,17 @@ const RegisterPage = () => {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Confirm Password
             </label>
-            <div className="relative">
+            <div className="relative mt-1">
               <input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
                 {...register("confirmPassword")}
-                className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10 bg-white dark:bg-slate-900 text-gray-900 dark:text-white transition-all ${
+                  errors.confirmPassword ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
                 }`}
               />
               <button
@@ -312,23 +312,23 @@ const RegisterPage = () => {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
                 {errors.confirmPassword.message}
               </p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Avatar (Optional)
             </label>
             <input
               type="file"
               accept="image/*"
               {...register("avatar")}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-50 hover:file:bg-gray-100"
+              className="w-full mt-1 text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 transition-all cursor-pointer"
             />
             {errors.avatar && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
                 {errors.avatar.message}
               </p>
             )}
@@ -336,14 +336,14 @@ const RegisterPage = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:bg-blue-400"
+            className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-xl shadow-sm hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors"
           >
             {isSubmitting ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
-        <p className="text-sm text-center">
+        <p className="text-sm text-center text-gray-600 dark:text-gray-400">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-blue-600">
+          <Link href="/login" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors">
             Sign In
           </Link>
         </p>

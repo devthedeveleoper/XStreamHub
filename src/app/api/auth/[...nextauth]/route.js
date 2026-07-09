@@ -72,6 +72,8 @@ export const authOptions = {
         token.id = user._id;
         token.username = user.username;
         token.avatar = user.avatar;
+        token.bio = user.bio;
+        token.banner = user.banner;
       }
       return token;
     },
@@ -80,6 +82,8 @@ export const authOptions = {
         session.user.id = token.id;
         session.user.name = token.username;
         session.user.image = token.avatar;
+        session.user.bio = token.bio;
+        session.user.banner = token.banner;
       }
       return session;
     },

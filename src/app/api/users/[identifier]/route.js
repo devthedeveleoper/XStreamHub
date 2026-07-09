@@ -50,6 +50,8 @@ export async function GET(request, { params }) {
         id: user._id,
         username: user.username,
         avatar: user.avatar,
+        bio: user.bio,
+        banner: user.banner,
         joined: user.createdAt,
         subscriberCount: user.subscribers ? user.subscribers.length : 0,
         subscribers: user.subscribers,

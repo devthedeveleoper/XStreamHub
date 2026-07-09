@@ -13,7 +13,7 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { username, email, password, avatar } = body;
+    const { username, email, password, avatar, bio, banner } = body;
 
     const user = await User.findById(session.user.id);
     if (!user) {
@@ -25,6 +25,8 @@ export async function PUT(request) {
     if (email) user.email = email.toLowerCase();
     if (password) user.password = password; // The 'pre-save' hook in the model will hash it
     if (avatar) user.avatar = avatar;
+    if (bio !== undefined) user.bio = bio; // Allow empty string to clear bio
+    if (banner) user.banner = banner;
 
     await user.save();
 
@@ -34,6 +36,8 @@ export async function PUT(request) {
       username: user.username,
       email: user.email,
       avatar: user.avatar,
+      bio: user.bio,
+      banner: user.banner,
     };
 
     return NextResponse.json(sanitizedUser);

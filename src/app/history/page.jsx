@@ -75,11 +75,11 @@ const HistoryPage = () => {
   return (
     <main className="container mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Watch History</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white font-display tracking-tight">Watch History</h1>
         {history.length > 0 && (
           <button
             onClick={handleClearAll}
-            className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:underline"
+            className="flex items-center gap-2 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors"
           >
             Clear all <MdAutoDelete />
           </button>
@@ -92,32 +92,32 @@ const HistoryPage = () => {
             <Link
               key={video._id}
               href={`/video/${video._id}`}
-              className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-100 group"
+              className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-gray-100 dark:hover:border-slate-700 transition-all group"
             >
-              <div className="w-48 h-28 flex-shrink-0">
+              <div className="w-48 h-28 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow rounded-xl overflow-hidden">
                 <VideoThumbnail videoId={video._id} altText={video.title} />
               </div>
               <div className="w-0 flex-grow">
-                <h3 className="font-bold truncate">{video.title}</h3>
-                <p className="text-sm text-gray-500 truncate">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display tracking-tight truncate mb-1">{video.title}</h3>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                   {video.uploader?.username}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   Watched on {new Date(updatedAt).toLocaleDateString()}
                 </p>
               </div>
               <button
                 onClick={(e) => handleRemove(e, video._id)}
-                className="p-2 text-gray-400 transition-opacity"
+                className="p-2 text-gray-400 dark:text-gray-500 transition-colors"
               >
-                <MdDelete className="hover:text-red-600 h-5 w-5" />
+                <MdDelete className="hover:text-rose-600 dark:hover:text-rose-400 h-5 w-5" />
               </button>
             </Link>
           ))
         ) : (
-          <div className="text-center p-10 border rounded-lg">
-            <h2 className="text-xl font-semibold">No watch history</h2>
-            <p className="text-gray-600 mt-2">
+          <div className="text-center p-12 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">No watch history</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
               Videos you watch will appear here.
             </p>
           </div>

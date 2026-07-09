@@ -1,62 +1,56 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import API from '@/lib/api';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
+import { motion } from 'framer-motion';
 import VideoCard from '@/components/VideoCard';
 import VideoCardSkeleton from '@/components/VideoCardSkeleton';
 
 const SearchResults = () => {
     const searchParams = useSearchParams();
     const query = searchParams.get('q');
-    
-    const [results, setResults] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (!query) {
-            setResults([]);
-            setLoading(false);
-            return;
-        }
-
-        const fetchResults = async () => {
-            try {
-                setLoading(true);
-                const response = await API.get(`/videos/search`, { params: { q: query } });
-                setResults(response.data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchResults();
-    }, [query]);
+    const { data: results, error, isLoading } = useSWR(
+        query ? `/videos/search?q=${encodeURIComponent(query)}` : null,
+        fetcher
+    );
 
     return (
-        <main className="container mx-auto px-6 py-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Search Results for: <span className="text-blue-600">"{query}"</span>
+        <motion.main 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="container mx-auto px-6 py-8"
+        >
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                Search Results for: <span className="text-indigo-600 dark:text-indigo-400">"{query}"</span>
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {loading ? (
+                {isLoading ? (
                     Array.from({ length: 8 }).map((_, index) => (
                         <VideoCardSkeleton key={index} />
                     ))
                 ) : (
-                    results.length > 0 ? (
-                        results.map(video => (
-                            <VideoCard key={video._id} video={video} />
+                    results && results.length > 0 ? (
+                        results.map((video, index) => (
+                            <motion.div
+                                key={video._id}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                                <VideoCard video={video} />
+                            </motion.div>
                         ))
                     ) : (
-                        <p className="col-span-full text-center text-gray-600">No videos found.</p>
+                        <div className="col-span-full text-center p-12 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                            <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No videos found matching your search.</p>
+                        </div>
                     )
                 )}
             </div>
-        </main>
+        </motion.main>
     );
 };
 

@@ -6,8 +6,7 @@ import Notification from '@/models/Notification';
 import mongoose from 'mongoose';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import axios from 'axios';
-
+import eventEmitter from "@/lib/eventEmitter";
 export async function GET(request, { params }) {
     await dbConnect();
     try {
@@ -81,17 +80,7 @@ export async function POST(request, { params }) {
         .populate("sender", "username avatar")
         .populate("video", "title");
 
-      axios
-        .post(`${process.env.NOTIFICATION_SERVER_URL}/api/notify`, {
-          recipientId: video.uploader.toString(),
-          notification: populatedNotif,
-        })
-        .catch((err) =>
-          console.error(
-            "Failed to trigger real-time notification for video owner:",
-            err.message
-          )
-        );
+      eventEmitter.emit("newNotification", populatedNotif);
     }
 
     if (parentCommentId) {
@@ -115,17 +104,7 @@ export async function POST(request, { params }) {
           .populate("sender", "username avatar")
           .populate("video", "title");
 
-        axios
-          .post(`${process.env.NOTIFICATION_SERVER_URL}/api/notify`, {
-            recipientId: parentComment.author.toString(),
-            notification: populatedReplyNotif,
-          })
-          .catch((err) =>
-            console.error(
-              "Failed to trigger real-time notification for commenter:",
-              err.message
-            )
-          );
+        eventEmitter.emit("newNotification", populatedReplyNotif);
       }
     }
 

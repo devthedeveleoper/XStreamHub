@@ -1,55 +1,53 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import API from "@/lib/api";
-import axios from 'axios';
-import { toast } from 'react-toastify';
 import CATEGORIES from "@/constants/categories";
+import { useVideoUpload } from "@/hooks/useVideoUpload";
+import { toast } from 'react-toastify';
 
-const formatBytes = (bytes, decimals = 2) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-};
-
-const formatTime = (seconds) => {
-    if (seconds === Infinity || isNaN(seconds) || seconds < 0) return '...';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return [h, m, s]
-        .map(v => v < 10 ? "0" + v : v)
-        .filter((v, i) => v !== "00" || i > 0)
-        .join(":");
-};
+const schema = yup.object().shape({
+  title: yup.string().required("Title is required"),
+  description: yup.string().required("Description is required"),
+  category: yup.string().required("Category is required"),
+  tags: yup.string(),
+  visibility: yup.string().required("Visibility is required"),
+  playlistId: yup.string(),
+  videoUrl: yup.string().url("Must be a valid URL").when("$uploadType", {
+    is: "remote",
+    then: (schema) => schema.required("Video URL is required for remote upload"),
+  }),
+});
 
 const UploadForm = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Other");
-  const [tags, setTags] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const thumbnailRef = useRef(null);
-  const videoFileRef = useRef(null);
-  
   const [uploadType, setUploadType] = useState("direct");
-  
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadSpeed, setUploadSpeed] = useState("");
-  const [eta, setEta] = useState("");
-  
-  const [isPolling, setIsPolling] = useState(false);
-  const [remoteProgress, setRemoteProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState("");
-  const pollingIntervalRef = useRef(null);
-
-  const [visibility, setVisibility] = useState("public");
   const [playlists, setPlaylists] = useState([]);
-  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+  
+  const {
+    isUploading, uploadProgress, uploadSpeed, eta,
+    isPolling, remoteProgress, statusMessage,
+    uploadDirect, uploadRemote
+  } = useVideoUpload();
+
+  const { register, handleSubmit, formState: { errors }, watch } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "Other",
+      tags: "",
+      visibility: "public",
+      playlistId: "",
+      videoUrl: ""
+    },
+    context: { uploadType }
+  });
+
+  const thumbnailFileList = watch("thumbnail");
+  const videoFileList = watch("videoFile");
 
   useEffect(() => {
     const fetchPlaylists = async () => {
@@ -63,216 +61,94 @@ const UploadForm = () => {
     fetchPlaylists();
   }, []);
 
-  const createFinalRecord = async (videoId) => {
-    toast.info("Publishing video...");
-    const finalFormData = new FormData();
-    finalFormData.append("title", title);
-    finalFormData.append("description", description);
-    finalFormData.append("videoId", videoId);
-    finalFormData.append("category", category);
-    finalFormData.append("visibility", visibility);
-    if (selectedPlaylist) {
-      finalFormData.append("playlistId", selectedPlaylist);
-    }
-    const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-    finalFormData.append("tags", JSON.stringify(tagsArray));
-
-    const thumbnailFile = thumbnailRef.current?.files?.[0];
-    if (thumbnailFile) {
-      finalFormData.append("thumbnailFile", thumbnailFile);
-    }
+  const onSubmit = async (data) => {
+    const thumbnailFile = thumbnailFileList?.[0];
     
-    await API.post("/videos/create-record", finalFormData);
-    toast.success("Video published successfully!");
-  };
-
-  const handleDirectUpload = async (e) => {
-    e.preventDefault();
-    const videoFile = videoFileRef.current?.files?.[0];
-    if (!videoFile || !title) {
-      toast.error("Please provide a title and a video file.");
-      return;
-    }
-    setIsUploading(true);
-    setUploadProgress(0);
-    setUploadSpeed('');
-    setEta('');
-    const startTime = Date.now();
-    try {
-      const { data: { url: uploadUrl } } = await API.get("/videos/get-upload-url");
-      const videoFormData = new FormData();
-      videoFormData.append("file", videoFile);
-      const response = await axios.post(uploadUrl, videoFormData, {
-        onUploadProgress: (progressEvent) => {
-            const { loaded, total } = progressEvent;
-            if (total) {
-                const percent = Math.floor((loaded * 100) / total);
-                setUploadProgress(percent);
-                const elapsedTime = (Date.now() - startTime) / 1000;
-                const bytesPerSecond = loaded / elapsedTime;
-                const remainingBytes = total - loaded;
-                const remainingSeconds = remainingBytes / bytesPerSecond;
-                setUploadSpeed(`${formatBytes(bytesPerSecond)}/s`);
-                setEta(`${formatTime(remainingSeconds)} remaining`);
-            }
-        },
-      });
-      const uploadResult = response.data;
-      if (uploadResult.status !== 200) {
-        throw new Error(uploadResult.msg || "Video upload failed");
+    if (uploadType === "direct") {
+      const videoFile = videoFileList?.[0];
+      if (!videoFile) {
+        toast.error("Please select a video file.");
+        return;
       }
-      const videoId = uploadResult.result.id;
-      await createFinalRecord(videoId);
-    } catch (error) {
-      toast.error("Upload failed. Please try again.");
-      console.error("Upload failed:", error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  
-  const handleRemoteUpload = async (e) => {
-    e.preventDefault();
-    if (!videoUrl || !title) {
-      toast.error("Please provide a video URL and a title.");
-      return;
-    }
-    setIsPolling(true);
-    setRemoteProgress(0);
-    setStatusMessage("Queuing remote upload...");
-    try {
-      const startResponse = await API.post("/videos/remote-upload/start", { videoUrl });
-      const remoteId = startResponse.data.id;
-      if (!remoteId) throw new Error("Failed to get remote upload ID from server.");
-      setStatusMessage(`Upload queued. Polling status...`);
-      let failedAttempts = 0;
-      const maxFailedAttempts = 5;
-      pollingIntervalRef.current = setInterval(async () => {
-        try {
-            const statusResponse = await API.get(`/videos/remote-upload/status`, { params: { id: remoteId } });
-            failedAttempts = 0;
-            const statusData = statusResponse.data[remoteId];
-            if (statusData && statusData.status === "finished") {
-                if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-                setRemoteProgress(100);
-                setIsPolling(false);
-                const videoId = statusData.linkid;
-                toast.success("Remote download finished! Publishing video...");
-                await createFinalRecord(videoId);
-            } else if (statusData && statusData.status === "error") {
-                if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-                setIsPolling(false);
-                toast.error(`Error during remote upload: ${statusData.error_message || 'Unknown error'}`);
-            } else if (statusData) {
-                const loaded = statusData.bytes_loaded || 0;
-                const total = statusData.bytes_total || 0;
-                const percentage = total > 0 ? Math.floor((loaded * 100) / total) : 0;
-                setRemoteProgress(percentage);
-                setStatusMessage(`Downloading: ${formatBytes(loaded)} / ${formatBytes(total)}`);
-            }
-        } catch (statusError) {
-             failedAttempts++;
-             console.log(`Status check attempt ${failedAttempts} failed. Retrying...`);
-             setStatusMessage(`Waiting for upload to initialize... (Attempt ${failedAttempts})`);
-             if (failedAttempts >= maxFailedAttempts) {
-                if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-                setIsPolling(false);
-                toast.error("Could not get upload status after multiple attempts.");
-                console.error("Status check failed:", statusError);
-             }
-        }
-      }, 5000);
-    } catch (error) {
-      toast.error("Remote upload failed. Please check the URL and try again.");
-      console.error("Remote upload initiation failed:", error);
-      setIsPolling(false);
+      await uploadDirect(videoFile, thumbnailFile, data);
+    } else {
+      if (!data.videoUrl) {
+        toast.error("Please provide a video URL.");
+        return;
+      }
+      await uploadRemote(data.videoUrl, thumbnailFile, data);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
+  const isBusy = isUploading || isPolling;
 
   return (
-    <div className="bg-gray-100 flex items-center justify-center min-h-screen py-12">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="bg-gray-50 dark:bg-slate-900 flex items-center justify-center min-h-screen py-12 transition-colors duration-300">
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-100 dark:border-slate-700 transition-colors duration-300">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white tracking-tight">
           Upload a New Video 🎬
         </h2>
         
-        <div className="flex justify-center mb-6 rounded-lg p-1 bg-gray-200">
+        <div className="flex justify-center mb-6 rounded-xl p-1 bg-gray-100 dark:bg-slate-900 shadow-inner">
             <button
+                type="button"
                 onClick={() => setUploadType("direct")}
-                disabled={isPolling || isUploading}
-                className={`w-1/2 p-2 rounded-md font-semibold transition-colors duration-300 ${uploadType === "direct" ? "bg-blue-600 text-white" : "hover:bg-gray-300"} disabled:opacity-50`}
+                disabled={isBusy}
+                className={`w-1/2 p-2 rounded-lg font-semibold transition-all duration-300 ${uploadType === "direct" ? "bg-indigo-600 text-white shadow-md transform hover:-translate-y-0.5" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"} disabled:opacity-50`}
             >
                 Direct Upload
             </button>
             <button
+                type="button"
                 onClick={() => setUploadType("remote")}
-                disabled={isPolling || isUploading}
-                className={`w-1/2 p-2 rounded-md font-semibold transition-colors duration-300 ${uploadType === "remote" ? "bg-blue-600 text-white" : "hover:bg-gray-300"} disabled:opacity-50`}
+                disabled={isBusy}
+                className={`w-1/2 p-2 rounded-lg font-semibold transition-all duration-300 ${uploadType === "remote" ? "bg-indigo-600 text-white shadow-md transform hover:-translate-y-0.5" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"} disabled:opacity-50`}
             >
                 Remote URL
             </button>
         </div>
 
-        <form onSubmit={uploadType === "direct" ? handleDirectUpload : handleRemoteUpload} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input id="title" type="text" placeholder="My Awesome Video" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"/>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <input {...register("title")} type="text" placeholder="My Awesome Video" className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white transition-all"/>
+                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                <input 
-                    id="tags" 
-                    type="text"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder="e.g., gaming, react, tutorial"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Separate tags with a comma.</p>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
+                <input {...register("tags")} type="text" placeholder="e.g., gaming, react, tutorial" className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white transition-all" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Separate tags with a comma.</p>
             </div>
 
             <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea id="description" placeholder="A short description of your video..." value={description} onChange={(e) => setDescription(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 h-24 resize-none"/>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <textarea {...register("description")} placeholder="A short description of your video..." className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white h-24 resize-none transition-all"/>
+                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">Custom Thumbnail <span className="text-xs text-gray-500">(Optional)</span></label>
-                <input 
-                    id="thumbnail" 
-                    type="file" 
-                    ref={thumbnailRef}
-                    accept="image/*" 
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Thumbnail <span className="text-xs text-gray-500 dark:text-gray-400">(Optional)</span></label>
+                <input {...register("thumbnail")} type="file" accept="image/*" className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 transition-all cursor-pointer" />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                    <select {...register("category")} className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                         {CATEGORIES.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="playlist" className="block text-sm font-medium text-gray-700 mb-1">Add to Playlist (Optional)</label>
-                    <select id="playlist" value={selectedPlaylist} onChange={(e) => setSelectedPlaylist(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Add to Playlist (Optional)</label>
+                    <select {...register("playlistId")} className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                         <option value="">None</option>
                         {playlists.map(p => <option key={p._id} value={p._id}>{p.title}</option>)}
                     </select>
                 </div>
                  <div>
-                    <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-                    <select id="visibility" value={visibility} onChange={(e) => setVisibility(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Visibility</label>
+                    <select {...register("visibility")} className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                         <option value="public">Public</option>
                         <option value="unlisted">Unlisted</option>
                         <option value="private">Private</option>
@@ -282,29 +158,25 @@ const UploadForm = () => {
 
             {uploadType === 'direct' ? (
                 <div>
-                    <label htmlFor="videoFile" className="block text-sm font-medium text-gray-700 mb-1">Video File</label>
-                    <input 
-                        id="videoFile" 
-                        type="file"
-                        ref={videoFileRef}
-                        accept="video/*" 
-                        required 
-                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video File</label>
+                    <input {...register("videoFile")} type="file" accept="video/*" className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 transition-all cursor-pointer" />
                 </div>
             ) : (
                 <div>
-                    <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
-                    <input id="videoUrl" type="url" placeholder="http://example.com/video.mp4" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"/>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video URL</label>
+                    <input {...register("videoUrl")} type="url" placeholder="http://example.com/video.mp4" className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white transition-all"/>
+                    {errors.videoUrl && <p className="text-red-500 text-xs mt-1">{errors.videoUrl.message}</p>}
                 </div>
             )}
             
             {isUploading && (
-                <div className="space-y-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-150" style={{ width: `${uploadProgress}%` }}></div>
+                <div className="space-y-2 animate-in fade-in duration-300">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                        <div className="bg-indigo-600 dark:bg-indigo-500 h-2.5 rounded-full transition-all duration-150 relative">
+                           <div className="absolute top-0 left-0 bottom-0 right-0 bg-white/20 animate-pulse"></div>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400">
                         <span>{uploadProgress}%</span>
                         <span>{uploadSpeed}</span>
                         <span>{eta}</span>
@@ -313,18 +185,20 @@ const UploadForm = () => {
             )}
 
             {isPolling && (
-                <div className="space-y-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${remoteProgress}%` }}></div>
+                <div className="space-y-2 animate-in fade-in duration-300">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                        <div className="bg-emerald-500 h-2.5 rounded-full transition-all duration-300 relative" style={{ width: `${remoteProgress}%` }}>
+                           <div className="absolute top-0 left-0 bottom-0 right-0 bg-white/20 animate-pulse"></div>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400">
                         <span>{remoteProgress}%</span>
                         <span className="truncate">{statusMessage}</span>
                     </div>
                 </div>
             )}
 
-            <button type="submit" disabled={isUploading || isPolling} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isBusy} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
                 {isUploading ? `Uploading... (${uploadProgress}%)` : isPolling ? "Processing..." : "Upload Video"}
             </button>
         </form>

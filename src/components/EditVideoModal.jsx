@@ -22,14 +22,14 @@ const EditVideoModal = ({ video, onSave, onCancel }) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-        <h2 className="text-2xl font-bold mb-4">Edit Video Details</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-lg">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Edit Video Details</h2>
         <form onSubmit={handleSubmit(onSave)} className="space-y-4">
           <div>
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Title
             </label>
@@ -37,8 +37,8 @@ const EditVideoModal = ({ video, onSave, onCancel }) => {
               id="title"
               type="text"
               {...register("title")}
-              className={`w-full mt-1 p-2 border rounded-md ${
-                errors.title ? "border-red-500" : "border-gray-300"
+              className={`w-full px-4 py-2 bg-white dark:bg-slate-800 border rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                errors.title ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
               }`}
             />
             {errors.title && (
@@ -50,7 +50,7 @@ const EditVideoModal = ({ video, onSave, onCancel }) => {
           <div>
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Description
             </label>
@@ -58,8 +58,8 @@ const EditVideoModal = ({ video, onSave, onCancel }) => {
               id="description"
               rows="5"
               {...register("description")}
-              className={`w-full mt-1 p-2 border rounded-md ${
-                errors.description ? "border-red-500" : "border-gray-300"
+              className={`w-full px-4 py-2 bg-white dark:bg-slate-800 border rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none ${
+                errors.description ? "border-rose-500" : "border-gray-200 dark:border-slate-700"
               }`}
             ></textarea>
             {errors.description && (
@@ -68,17 +68,17 @@ const EditVideoModal = ({ video, onSave, onCancel }) => {
               </p>
             )}
           </div>
-          <div className="flex justify-end space-x-4 mt-6">
+          <div className="flex justify-end space-x-3 mt-8">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md"
             >
               Save Changes
             </button>

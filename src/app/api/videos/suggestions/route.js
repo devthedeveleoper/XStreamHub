@@ -9,32 +9,123 @@ export async function GET(request) {
         const { searchParams } = request.nextUrl;
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '10');
-        const excludeId = searchParams.get('exclude');
+        const currentVideoId = searchParams.get('exclude');
 
-        const cacheKey = `suggestions:p${page}:exclude:${excludeId || 'none'}`;
+        const cacheKey = `suggestions:p${page}:exclude:${currentVideoId || 'none'}`;
         
         const cachedSuggestions = await redis.get(cacheKey);
         if (cachedSuggestions) {
             console.log(`CACHE HIT for key: ${cacheKey}`);
-            return NextResponse.json(cachedSuggestions);
+            const data = typeof cachedSuggestions === 'string' ? JSON.parse(cachedSuggestions) : cachedSuggestions;
+            return NextResponse.json(data);
         }
 
         console.log(`CACHE MISS for key: ${cacheKey}`);
         
         await dbConnect();
-        
-        const skip = (page - 1) * limit;
-        const filter = { visibility: 'public' };
-        if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
-            filter._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+
+        let currentVideo = null;
+        if (currentVideoId && mongoose.Types.ObjectId.isValid(currentVideoId)) {
+            currentVideo = await Video.findById(currentVideoId).select("tags category");
         }
 
-        const totalVideos = await Video.countDocuments(filter);
-        const videos = await Video.find(filter)
-            .sort({ createdAt: -1 })
-            .populate('uploader', 'username')
-            .limit(limit)
-            .skip(skip);
+        const skip = (page - 1) * limit;
+
+        const pipeline = [];
+
+        // Base match: only public videos, exclude the currently watching video
+        const baseMatch = { visibility: 'public' };
+        if (currentVideoId && mongoose.Types.ObjectId.isValid(currentVideoId)) {
+            baseMatch._id = { $ne: new mongoose.Types.ObjectId(currentVideoId) };
+        }
+        pipeline.push({ $match: baseMatch });
+
+        // Scoring logic (Context-aware based on current video + views)
+        pipeline.push({
+            $addFields: {
+                score: {
+                    $add: [
+                        // Current Video Context boost
+                        currentVideo && currentVideo.category
+                        ? {
+                            $cond: [
+                                { $eq: ["$category", currentVideo.category] },
+                                20,
+                                0,
+                            ],
+                            }
+                        : 0,
+
+                        currentVideo && currentVideo.tags
+                        ? {
+                            $multiply: [
+                                {
+                                $size: {
+                                    $setIntersection: [
+                                    { $ifNull: ["$tags", []] },
+                                    currentVideo.tags,
+                                    ],
+                                },
+                                },
+                                15,
+                            ],
+                            }
+                        : 0,
+                    ]
+                }
+            }
+        });
+
+        // Sort by score (descending), then views (descending), then creation date (descending)
+        pipeline.push({
+            $sort: { score: -1, views: -1, createdAt: -1 }
+        });
+
+        // Pagination and populated fields
+        const facetPipeline = [
+            ...pipeline,
+            {
+                $facet: {
+                metadata: [{ $count: "total" }],
+                data: [
+                    { $skip: skip },
+                    { $limit: limit },
+                    {
+                    $lookup: {
+                        from: "users",
+                        localField: "uploader",
+                        foreignField: "_id",
+                        as: "uploaderDetails",
+                    },
+                    },
+                    {
+                    $unwind: {
+                        path: "$uploaderDetails",
+                        preserveNullAndEmptyArrays: true,
+                    },
+                    },
+                    {
+                    $addFields: {
+                        uploader: {
+                        _id: "$uploaderDetails._id",
+                        username: "$uploaderDetails.username",
+                        avatar: "$uploaderDetails.avatar",
+                        },
+                    },
+                    },
+                    {
+                    $project: {
+                        uploaderDetails: 0,
+                    },
+                    },
+                ],
+                },
+            },
+        ];
+
+        const results = await Video.aggregate(facetPipeline);
+        const totalVideos = results[0].metadata[0]?.total || 0;
+        const videos = results[0].data;
             
         const responseData = {
             videos,

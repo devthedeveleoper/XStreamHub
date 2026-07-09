@@ -31,34 +31,26 @@ const NotificationsPanel = () => {
       setUnreadCount(res.data.unreadCount);
     });
 
-    if (!socketRef.current) {
-      const wsUrl = (
-        process.env.NEXT_PUBLIC_NOTIFICATION_SERVER_URL || "ws://localhost:4000"
-      ).replace(/^http/, "ws");
-      const socket = new WebSocket(`${wsUrl}/ws?userId=${user.id}`);
-      socketRef.current = socket;
+    const eventSource = new EventSource('/api/notifications/stream');
 
-      socket.onopen = () => {
-        console.log("Connected to Go notification server!");
-      };
-
-      socket.onmessage = (event) => {
-        const newNotification = JSON.parse(event.data);
-        setNotifications((prev) => [newNotification, ...prev]);
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'connected') {
+        console.log("Connected to Next.js SSE notification server!");
+      } else {
+        setNotifications((prev) => [data, ...prev]);
         setUnreadCount((prev) => prev + 1);
-        // toast.info(`New notification from ${newNotification.sender.username}!`); // It's a bit annoying sometimes 😒
-      };
+        toast.info(`New notification from ${data.sender.username}!`);
+      }
+    };
 
-      socket.onclose = () =>
-        console.log("Disconnected from Go notification server.");
-      socket.onerror = (error) => console.error("WebSocket Error:", error);
-    }
+    eventSource.onerror = (error) => {
+      console.error("SSE Error:", error);
+      eventSource.close();
+    };
     
     return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
-      }
+      eventSource.close();
     };
   }, [isAuthenticated, user]);
 
@@ -105,7 +97,7 @@ const NotificationsPanel = () => {
     <div className="relative" ref={panelRef}>
       <button
         onClick={handleBellClick}
-        className="relative text-gray-600 hover:text-blue-600 p-2"
+        className="relative text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 p-2 transition-colors"
       >
         <FaBell size={20} />
         {unreadCount > 0 && (
@@ -116,13 +108,13 @@ const NotificationsPanel = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border overflow-hidden">
-          <div className="p-3 flex justify-between items-center border-b">
-            <h3 className="font-bold text-sm">Notifications</h3>
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+          <div className="p-3 flex justify-between items-center border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
+            <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">Notifications</h3>
             {notifications.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline transition-colors"
               >
                 Clear All
               </button>
@@ -135,8 +127,8 @@ const NotificationsPanel = () => {
                   <Link
                     href={`/video/${notif.video?._id}`}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-start gap-3 border-t p-3 text-sm hover:bg-gray-100 ${
-                      !notif.isRead ? "bg-blue-50" : ""
+                    className={`flex items-start gap-3 border-t border-gray-100 dark:border-slate-700 p-3 text-sm hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${
+                      !notif.isRead ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
                     }`}
                   >
                     <div className="flex-shrink-0 mt-1">
@@ -152,9 +144,9 @@ const NotificationsPanel = () => {
                         <FaUserCircle size={32} className="text-gray-400" />
                       )}
                     </div>
-                    <div className="w-0 flex-grow">
+                    <div className="w-0 flex-grow text-gray-800 dark:text-gray-200">
                       <p>
-                        <strong className="font-semibold">
+                        <strong className="font-semibold text-gray-900 dark:text-white">
                           {notif.sender.username}
                         </strong>
                         {notif.type === "like" &&
@@ -163,7 +155,7 @@ const NotificationsPanel = () => {
                           ` commented on your video: "${notif.video?.title}"`}
                         {notif.type === "reply" && ` replied to your comment.`}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {new Date(notif.createdAt).toLocaleString()}
                       </p>
                     </div>
@@ -171,7 +163,7 @@ const NotificationsPanel = () => {
                 </li>
               ))
             ) : (
-              <li className="p-4 text-center text-gray-500">
+              <li className="p-4 text-center text-gray-500 dark:text-gray-400">
                 No new notifications.
               </li>
             )}

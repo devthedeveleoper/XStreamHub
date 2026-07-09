@@ -41,19 +41,19 @@ const SortableVideoItem = ({ video, onRemove }) => {
         <li
             ref={setNodeRef}
             style={style}
-            className="flex items-center space-x-3 p-2 bg-gray-50 rounded border"
+            className="flex items-center space-x-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-300 shadow-sm mb-3"
         >
-            <span {...attributes} {...listeners} className="text-gray-400 cursor-grab touch-none">☰</span>
-            <div className="w-20 h-12 flex-shrink-0">
+            <span {...attributes} {...listeners} className="text-gray-400 dark:text-slate-500 cursor-grab touch-none px-2 py-4">☰</span>
+            <div className="w-24 h-14 flex-shrink-0">
                  <VideoThumbnail
                     videoId={video._id}
                     altText={video.title}
                 />
             </div>
-            <div className="flex-grow w-0">
-                <Link href={`/video/${video._id}`} className="font-semibold hover:underline truncate text-sm">{video.title}</Link>
+            <div className="flex-grow w-0 px-2">
+                <Link href={`/video/${video._id}`} className="font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-sm block">{video.title}</Link>
             </div>
-            <button onClick={onRemove} className="text-red-500 hover:text-red-700 text-xs font-semibold flex-shrink-0">Remove</button>
+            <button onClick={onRemove} className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-sm font-semibold flex-shrink-0 px-3 transition-colors">Remove</button>
         </li>
     );
 };
@@ -131,20 +131,28 @@ const EditPlaylistPage = () => {
 
     return (
         <main className="container mx-auto px-6 py-8">
-            <Link href="/my-playlists" className="text-sm text-blue-600 hover:underline mb-4 block">&larr; Back to all playlists</Link>
-            <h1 className="text-3xl font-bold">{playlist.title}</h1>
-            <p className="text-gray-500 mb-6">{playlist.videos.length} videos</p>
-            <div className="max-w-2xl">
+            <Link href="/my-playlists" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:underline mb-6 block transition-colors">&larr; Back to all playlists</Link>
+            
+            <div className="mb-8 p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{playlist.title}</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">{playlist.videos.length} videos</p>
+            </div>
+
+            <div className="max-w-3xl">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={playlist.videos.map(v => v._id)} strategy={verticalListSortingStrategy}>
-                        <ul className="space-y-2">
+                        <ul className="space-y-3">
                             {playlist.videos.map(video => (
                                 <SortableVideoItem key={video._id} video={video} onRemove={() => handleRemoveVideo(video._id)} />
                             ))}
                         </ul>
                     </SortableContext>
                 </DndContext>
-                 {playlist.videos.length === 0 && <p className="mt-4 text-center text-gray-500">This playlist is empty. Add videos by clicking the "Save" button on a video page.</p>}
+                 {playlist.videos.length === 0 && (
+                    <div className="mt-8 text-center p-12 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">This playlist is empty. Add videos by clicking the "Save" button on a video page.</p>
+                    </div>
+                 )}
             </div>
         </main>
     );

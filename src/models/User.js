@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    banner: {
+        type: String,
+        required: false,
+    },
+    bio: {
+        type: String,
+        required: false,
+        maxLength: 500,
+    },
     subscribers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
 
-import "@/models/User";
-import "@/models/Video";
-import "@/models/Comment";
-
 const MONGODB_URI = process.env.MONGO_URI;
 
 if (!MONGODB_URI) {

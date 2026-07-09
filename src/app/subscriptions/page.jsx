@@ -43,10 +43,10 @@ const SubscriptionsPage = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="text-center p-10">
-                <h2 className="text-2xl font-bold mb-4">Content from your subscriptions</h2>
-                <p className="text-gray-600">
-                    <Link href="/login" className="text-blue-600 hover:underline">Sign in</Link> to see updates from your favorite channels.
+            <div className="text-center p-12">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Content from your subscriptions</h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                    <Link href="/login" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors">Sign in</Link> to see updates from your favorite channels.
                 </p>
             </div>
         );
@@ -54,7 +54,7 @@ const SubscriptionsPage = () => {
     
     return (
         <main className="container mx-auto px-6 py-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Subscriptions Feed</h2>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-display tracking-tight mb-8">Subscriptions Feed</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {loading ? (
                     Array.from({ length: 8 }).map((_, index) => <VideoCardSkeleton key={index} />)
@@ -62,7 +62,7 @@ const SubscriptionsPage = () => {
                     videos.length > 0 ? (
                         videos.map(video => <VideoCard key={video._id} video={video} />)
                     ) : (
-                        <p className="col-span-full text-center text-gray-600">No new videos from your subscriptions.</p>
+                        <p className="col-span-full text-center text-gray-500 dark:text-gray-400 py-12">No new videos from your subscriptions.</p>
                     )
                 )}
             </div>

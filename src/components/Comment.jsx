@@ -91,7 +91,7 @@ const Comment = ({ comment, videoId, onCommentDeleted, onCommentUpdated, onReply
                             className="rounded-full"
                         />
                     ) : (
-                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-600">
+                        <div className="w-10 h-10 bg-gray-200 dark:bg-slate-700 rounded-full flex items-center justify-center font-bold text-gray-600 dark:text-gray-300">
                              {comment.author.username.charAt(0).toUpperCase()}
                         </div>
                     )}
@@ -99,14 +99,14 @@ const Comment = ({ comment, videoId, onCommentDeleted, onCommentUpdated, onReply
             </div>
             <div className="flex-1">
                 <div className="flex justify-between items-center">
-                    <p className="font-semibold text-sm">
-                        <Link href={`/profile/${comment.author.username}`} className="hover:underline">{comment.author.username}</Link>{" "}
-                        <span className="text-xs text-gray-500 font-normal">{new Date(comment.createdAt).toLocaleString()}</span>
+                    <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                        <Link href={`/profile/${comment.author.username}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{comment.author.username}</Link>{" "}
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">{new Date(comment.createdAt).toLocaleString()}</span>
                     </p>
                     {isOwner && !isEditing && (
                         <div className="flex space-x-3">
-                             <button onClick={() => setIsEditing(true)} className="text-xs text-gray-500 hover:underline">Edit</button>
-                             <button onClick={handleDelete} className="text-xs text-red-500 hover:underline">Delete</button>
+                             <button onClick={() => setIsEditing(true)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Edit</button>
+                             <button onClick={handleDelete} className="text-xs text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors">Delete</button>
                         </div>
                     )}
                 </div>
@@ -116,21 +116,21 @@ const Comment = ({ comment, videoId, onCommentDeleted, onCommentUpdated, onReply
                         <textarea 
                             value={editText} 
                             onChange={(e) => setEditText(e.target.value)}
-                            className="w-full p-2 border rounded-md text-sm"
+                            className="w-full p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none resize-none"
                             rows={2}
                         />
-                        <div className="flex space-x-2 mt-1">
-                            <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700">Save</button>
-                            <button type="button" onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-xs font-semibold hover:bg-gray-300">Cancel</button>
+                        <div className="flex space-x-2 mt-2">
+                            <button type="submit" className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm">Save</button>
+                            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
                         </div>
                     </form>
                 ) : (
-                    <p className="text-gray-800 text-sm mt-1">{comment.text}</p>
+                    <p className="text-gray-800 dark:text-gray-300 text-sm mt-1">{comment.text}</p>
                 )}
                 
                 <div className="flex items-center space-x-4 text-xs mt-2">
-                    <button onClick={() => setShowReplyForm(!showReplyForm)} className="font-semibold text-gray-600 hover:underline">Reply</button>
-                    <button onClick={handleLoadReplies} className="font-semibold text-gray-600 hover:underline">
+                    <button onClick={() => setShowReplyForm(!showReplyForm)} className="font-semibold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Reply</button>
+                    <button onClick={handleLoadReplies} className="font-semibold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         {loadingReplies ? 'Loading...' : replies.length > 0 ? 'Hide Replies' : 'View Replies'}
                     </button>
                 </div>
@@ -141,17 +141,17 @@ const Comment = ({ comment, videoId, onCommentDeleted, onCommentUpdated, onReply
                             value={replyText} 
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder={`Replying to ${comment.author.username}...`}
-                            className="w-full p-2 border rounded-md text-sm"
+                            className="w-full p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none resize-none"
                             rows={2}
                         />
-                        <div className="flex space-x-2 mt-1">
-                             <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700">Post Reply</button>
-                             <button type="button" onClick={() => setShowReplyForm(false)} className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-xs font-semibold hover:bg-gray-300">Cancel</button>
+                        <div className="flex space-x-2 mt-2">
+                             <button type="submit" className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm">Post Reply</button>
+                             <button type="button" onClick={() => setShowReplyForm(false)} className="px-4 py-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
                         </div>
                     </form>
                 )}
 
-                <div className="mt-4 space-y-4 pl-6 border-l-2">
+                <div className="mt-4 space-y-4 pl-6 border-l-2 border-gray-200 dark:border-slate-700">
                     {replies.map(reply => (
                         <Comment 
                             key={reply._id} 

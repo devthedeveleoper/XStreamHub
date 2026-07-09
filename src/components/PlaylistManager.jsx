@@ -41,9 +41,9 @@ const SortableVideoItem = ({ video, onRemove }) => {
         <li
             ref={setNodeRef}
             style={style}
-            className="flex items-center space-x-3 p-2 bg-gray-50 rounded border"
+            className="flex items-center space-x-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 hover:shadow-sm transition-shadow group"
         >
-            <span {...attributes} {...listeners} className="text-gray-400 cursor-grab touch-none">☰</span>
+            <span {...attributes} {...listeners} className="text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 cursor-grab touch-none p-1 transition-colors">☰</span>
             <div className="w-20 h-12 object-cover rounded flex-shrink-0">
                 <VideoThumbnail
                     fileId={video.fileId}
@@ -52,12 +52,12 @@ const SortableVideoItem = ({ video, onRemove }) => {
                 />
             </div>
             <div className="flex-grow w-0">
-                <Link href={`/video/${video._id}`} className="font-semibold hover:underline truncate text-sm">
+                <Link href={`/video/${video._id}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate text-sm transition-colors">
                     {video.title}
                 </Link>
-                <p className="text-xs text-gray-500 truncate">{video.uploader.username}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{video.uploader.username}</p>
             </div>
-            <button onClick={onRemove} className="text-red-500 hover:text-red-700 text-xs font-semibold flex-shrink-0">
+            <button onClick={onRemove} className="text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 text-xs font-semibold flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 bg-rose-50 dark:bg-rose-400/10 rounded-lg">
                 Remove
             </button>
         </li>
@@ -124,24 +124,24 @@ const PlaylistManager = ({ playlistId }) => {
 
     if (loading) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-                <div className="h-7 bg-gray-300 rounded w-1/2 mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/4 mb-4"></div>
-                <div className="space-y-2">
-                    <div className="h-16 bg-gray-200 rounded"></div>
-                    <div className="h-16 bg-gray-200 rounded"></div>
-                    <div className="h-16 bg-gray-200 rounded"></div>
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 rounded-2xl shadow-sm animate-pulse">
+                <div className="h-7 bg-gray-200 dark:bg-slate-800 rounded-lg w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-slate-800 rounded-lg w-1/4 mb-6"></div>
+                <div className="space-y-3">
+                    <div className="h-20 bg-gray-100 dark:bg-slate-800 rounded-xl"></div>
+                    <div className="h-20 bg-gray-100 dark:bg-slate-800 rounded-xl"></div>
+                    <div className="h-20 bg-gray-100 dark:bg-slate-800 rounded-xl"></div>
                 </div>
             </div>
         );
     }
     
-    if (!playlist) return <div className="p-6">Playlist not found.</div>;
+    if (!playlist) return <div className="p-6 text-gray-500 dark:text-gray-400 text-center font-medium">Playlist not found.</div>;
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold">{playlist.title}</h2>
-            <p className="text-sm text-gray-500">{playlist.videos.length} videos</p>
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 rounded-2xl shadow-sm transition-colors duration-300">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{playlist.title}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-6 font-medium">{playlist.videos.length} videos</p>
 
             <DndContext
                 sensors={sensors}
@@ -163,7 +163,7 @@ const PlaylistManager = ({ playlistId }) => {
                     </ul>
                 </SortableContext>
             </DndContext>
-             {playlist.videos.length === 0 && <p className="mt-4 text-sm text-center text-gray-500">This playlist is empty. Add videos by clicking the "Save" button on a video page.</p>}
+            {playlist.videos.length === 0 && <p className="mt-8 text-sm text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50 p-6 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">This playlist is empty. Add videos by clicking the "Watch Later" button on a video card or using the Save modal.</p>}
         </div>
     );
 };

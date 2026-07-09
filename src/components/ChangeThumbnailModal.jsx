@@ -46,40 +46,39 @@ const ChangeThumbnailModal = ({ video, onSave, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Change Thumbnail</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">Change Thumbnail</h2>
         <div className="space-y-4">
           <input
             type="file"
             ref={fileInputRef}
             accept="image/*"
-            onChange={handleFileChange}
-            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-50"
+            className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 transition-all cursor-pointer"
           />
           {previewUrl && (
-            <div className="mt-4 border rounded-md p-2">
+            <div className="mt-4 border border-gray-200 dark:border-slate-700 rounded-xl p-2 bg-gray-50 dark:bg-slate-800">
               <img
                 src={previewUrl}
                 alt="New thumbnail preview"
-                className="w-full h-auto rounded-md"
+                className="w-full h-auto rounded-lg shadow-sm"
               />
             </div>
           )}
         </div>
-        <div className="flex justify-end space-x-2 mt-6">
+        <div className="flex justify-end space-x-3 mt-8">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 rounded-md"
+            className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isUploading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-blue-300"
+            className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors shadow-md"
           >
-            {isUploading ? "Uploading..." : "Save"}
+            {isUploading ? "Uploading..." : "Save Changes"}
           </button>
         </div>
       </div>

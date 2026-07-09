@@ -52,59 +52,61 @@ const SaveToPlaylistModal = ({ videoId, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">Save to...</h2>
-                    <button onClick={onClose} className="text-2xl font-light">&times;</button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Save to...</h2>
+                    <button onClick={onClose} className="text-3xl font-light text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors leading-none">&times;</button>
                 </div>
-                {loading ? <p>Loading playlists...</p> : (
-                    <ul className="space-y-2 max-h-60 overflow-y-auto">
+                {loading ? <p className="text-gray-500 dark:text-gray-400">Loading playlists...</p> : (
+                    <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
                         {playlists.map(playlist => (
                             <li key={playlist._id}>
-                                <label className="flex items-center space-x-3 cursor-pointer p-1">
+                                <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
                                     <input 
                                         type="checkbox" 
                                         checked={playlist.videos.includes(videoId)}
                                         onChange={() => handleToggleVideoInPlaylist(playlist._id)}
-                                        className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                                        className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-700 transition-all cursor-pointer"
                                     />
-                                    <span>{playlist.title}</span>
+                                    <span className="text-gray-700 dark:text-gray-300 font-medium">{playlist.title}</span>
                                 </label>
                             </li>
                         ))}
                     </ul>
                 )}
-                <div className="mt-4 border-t pt-4">
+                <div className="mt-6 border-t border-gray-100 dark:border-slate-800 pt-6">
                     {showCreateForm ? (
-                        <form onSubmit={handleCreatePlaylist}>
+                        <form onSubmit={handleCreatePlaylist} className="animate-in fade-in slide-in-from-top-2 duration-200">
                             <input 
                                 type="text"
                                 placeholder="Enter playlist name..."
                                 value={newPlaylistTitle}
                                 onChange={(e) => setNewPlaylistTitle(e.target.value)}
-                                className="w-full p-2 border rounded-md"
+                                className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white transition-all outline-none"
                                 required
                             />
-                            <div className="mt-2 flex items-center justify-between">
-                                <label htmlFor="isPublic" className="text-sm text-gray-600 flex items-center gap-2">
+                            <div className="mt-4 flex items-center justify-between">
+                                <label htmlFor="isPublic" className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 cursor-pointer font-medium">
                                     <input 
                                         id="isPublic"
                                         type="checkbox" 
                                         checked={newPlaylistIsPublic}
                                         onChange={(e) => setNewPlaylistIsPublic(e.target.checked)}
-                                        className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                                        className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-slate-600 dark:bg-slate-700 transition-all cursor-pointer"
                                     />
                                     Public
                                 </label>
                                 <div className="flex justify-end space-x-2">
-                                    <button type="button" onClick={() => setShowCreateForm(false)} className="px-3 py-1 text-sm bg-gray-200 rounded-md">Cancel</button>
-                                    <button type="submit" className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md">Create</button>
+                                    <button type="button" onClick={() => setShowCreateForm(false)} className="px-4 py-1.5 text-sm font-semibold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                                    <button type="submit" className="px-4 py-1.5 text-sm font-semibold bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors shadow-sm">Create</button>
                                 </div>
                             </div>
                         </form>
                     ) : (
-                        <button onClick={() => setShowCreateForm(true)} className="w-full text-left font-semibold text-blue-600 p-1">+ Create new playlist</button>
+                        <button onClick={() => setShowCreateForm(true)} className="w-full text-left font-semibold text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors">
+                            + Create new playlist
+                        </button>
                     )}
                 </div>
             </div>

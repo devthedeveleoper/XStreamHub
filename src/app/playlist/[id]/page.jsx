@@ -37,22 +37,22 @@ const ViewPlaylistPage = () => {
     }
 
     if (!playlist) {
-        return <div className="text-center p-10 text-red-500 font-semibold">Playlist not found or it is private.</div>;
+        return <div className="text-center p-12 text-rose-500 dark:text-rose-400 font-semibold">Playlist not found or it is private.</div>;
     }
 
     return (
         <main className="container mx-auto px-6 py-8">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800">{playlist.title}</h1>
-                {playlist.description && <p className="text-gray-600 mt-2">{playlist.description}</p>}
-                <p className="text-sm text-gray-500 mt-1">{playlist.videos.length} videos</p>
+            <div className="mb-10 p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{playlist.title}</h1>
+                {playlist.description && <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">{playlist.description}</p>}
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">{playlist.videos.length} videos</p>
             </div>
 
             <div className="space-y-4">
                 {playlist.videos.length > 0 ? (
                     playlist.videos.map((video, index) => (
-                        <Link key={video._id} href={`/video/${video._id}`} className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                            <span className="text-lg font-semibold text-gray-400 w-8 text-center">{index + 1}</span>
+                        <Link key={video._id} href={`/video/${video._id}`} className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-gray-100 dark:hover:border-slate-700 transition-all group">
+                            <span className="text-lg font-semibold text-gray-400 dark:text-slate-600 w-8 text-center">{index + 1}</span>
                             <div className="w-40 h-24 flex-shrink-0">
                                 <VideoThumbnail 
                                     videoId={video._id}
@@ -60,13 +60,15 @@ const ViewPlaylistPage = () => {
                                 />
                             </div>
                             <div className="w-0 flex-grow">
-                                <h3 className="font-bold truncate">{video.title}</h3>
-                                <p className="text-sm text-gray-500 truncate">{video.uploader?.username}</p>
+                                <h3 className="font-bold text-gray-900 dark:text-white truncate">{video.title}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{video.uploader?.username}</p>
                             </div>
                         </Link>
                     ))
                 ) : (
-                    <p className="text-gray-500">This playlist is empty.</p>
+                    <div className="text-center p-12 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">This playlist is empty.</p>
+                    </div>
                 )}
             </div>
         </main>
