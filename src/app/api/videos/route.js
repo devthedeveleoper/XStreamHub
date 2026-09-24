@@ -7,35 +7,40 @@ import redis from '@/lib/redis';
 export async function GET(request) {
     try {
         const { searchParams } = request.nextUrl;
-        const sortOption = searchParams.get('sort') || 'date_desc';
+        const sortOption = searchParams.get('sort') || 'trending';
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '12');
         const category = searchParams.get('category');
+        const type = searchParams.get('type') || 'standard';
 
-        const cacheKey = `videos:${category || 'all'}:${sortOption}:p${page}`;
+        const cacheKey = `videos_v2:${category || 'all'}:${sortOption}:p${page}:t${type}`;
 
         const cachedData = await redis.get(cacheKey);
 
         if (cachedData) {
-            console.log(`CACHE HIT for key: ${cacheKey}`);
             return NextResponse.json(cachedData);
         }
-
-        console.log(`CACHE MISS for key: ${cacheKey}`);
         
         await dbConnect();
         
         const skip = (page - 1) * limit;
         const sortCriteria = {
+            'trending': { trendingScore: -1 },
             'date_desc': { createdAt: -1 },
             'views_desc': { views: -1 },
             'likes_desc': { likesCount: -1 },
             'comments_desc': { commentCount: -1 }
-        }[sortOption] || { createdAt: -1 };
+        }[sortOption] || { trendingScore: -1 };
 
         const filter = { visibility: 'public' };
         if (category && category !== "All") {
             filter.category = category;
+        }
+        
+        if (type === 'short') {
+            filter.isShort = true;
+        } else {
+            filter.isShort = { $ne: true };
         }
 
         const totalVideos = await Video.countDocuments(filter);
@@ -51,7 +56,8 @@ export async function GET(request) {
             totalPages: Math.ceil(totalVideos / limit),
         };
 
-        await redis.set(cacheKey, JSON.stringify(responseData), { ex: 300 });
+        const cacheExpiry = type === 'short' ? 10 : 300;
+        await redis.set(cacheKey, JSON.stringify(responseData), { ex: cacheExpiry });
 
         return NextResponse.json(responseData);
 

@@ -25,7 +25,7 @@ export async function POST(request, { params }) {
 
     if (user) {
       await WatchHistory.updateOne(
-        { userId: user.id, videoId: params.id },
+        { userId: user.id, videoId: id },
         { $set: { updatedAt: new Date() } },
         { upsert: true }
       );

@@ -39,6 +39,10 @@ const videoSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    isShort: {
+        type: Boolean,
+        default: false
+    },
     views: {
         type: Number,
         default: 0

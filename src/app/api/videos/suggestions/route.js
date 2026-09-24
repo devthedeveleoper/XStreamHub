@@ -15,12 +15,9 @@ export async function GET(request) {
         
         const cachedSuggestions = await redis.get(cacheKey);
         if (cachedSuggestions) {
-            console.log(`CACHE HIT for key: ${cacheKey}`);
             const data = typeof cachedSuggestions === 'string' ? JSON.parse(cachedSuggestions) : cachedSuggestions;
             return NextResponse.json(data);
         }
-
-        console.log(`CACHE MISS for key: ${cacheKey}`);
         
         await dbConnect();
 

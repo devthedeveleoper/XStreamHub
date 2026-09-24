@@ -5,7 +5,7 @@ import Notification from "@/models/Notification";
 import UserActivity from "@/models/UserActivity";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import eventEmitter from "@/lib/eventEmitter";
+import { sendRealtimeNotification } from "@/lib/notifier";
 export async function POST(request, { params }) {
   await dbConnect();
   try {
@@ -47,8 +47,8 @@ export async function POST(request, { params }) {
           .populate("sender", "username avatar")
           .populate("video", "title");
 
-        // Trigger the real-time notification via SSE EventEmitter
-        eventEmitter.emit("newNotification", populatedNotif);
+        // Trigger the real-time notification via Aurahub Go Notifier
+        sendRealtimeNotification(video.uploader, populatedNotif);
       }
     } else {
       // User is unliking the video

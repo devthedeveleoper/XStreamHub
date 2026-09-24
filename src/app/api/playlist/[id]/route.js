@@ -51,7 +51,8 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const playlist = await Playlist.findById(params.id);
+        const { id } = await params;
+        const playlist = await Playlist.findById(id);
         if (!playlist) {
             return NextResponse.json({ message: 'Playlist not found' }, { status: 404 });
         }
@@ -60,7 +61,7 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ message: 'User not authorized to delete this playlist' }, { status: 403 });
         }
 
-        await Playlist.deleteOne({ _id: params.id });
+        await Playlist.deleteOne({ _id: id });
 
         return NextResponse.json({ message: 'Playlist deleted successfully' });
     } catch (error) {

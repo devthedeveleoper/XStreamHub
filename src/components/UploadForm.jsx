@@ -20,6 +20,7 @@ const schema = yup.object().shape({
     is: "remote",
     then: (schema) => schema.required("Video URL is required for remote upload"),
   }),
+  isShort: yup.boolean(),
 });
 
 const UploadForm = () => {
@@ -41,7 +42,8 @@ const UploadForm = () => {
       tags: "",
       visibility: "public",
       playlistId: "",
-      videoUrl: ""
+      videoUrl: "",
+      isShort: false
     },
     context: { uploadType }
   });
@@ -154,6 +156,20 @@ const UploadForm = () => {
                         <option value="private">Private</option>
                     </select>
                 </div>
+            </div>
+            <div className="flex items-center space-x-3 p-4 bg-indigo-50 dark:bg-slate-800 rounded-xl border border-indigo-100 dark:border-slate-700">
+                <input 
+                  type="checkbox" 
+                  id="isShort" 
+                  {...register("isShort")} 
+                  className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 dark:bg-slate-900 border-gray-300 dark:border-slate-600"
+                />
+                <label htmlFor="isShort" className="text-sm font-bold text-gray-800 dark:text-gray-200 cursor-pointer">
+                  Upload as a Short (Vertical Video)
+                  <span className="block text-xs font-normal text-gray-500 dark:text-gray-400 mt-0.5">
+                    This will display the video in the dedicated Shorts feed.
+                  </span>
+                </label>
             </div>
 
             {uploadType === 'direct' ? (

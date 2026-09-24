@@ -26,6 +26,7 @@ export async function POST(request) {
         const tagsString = formData.get('tags');
         const visibility = formData.get('visibility');
         const playlistId = formData.get('playlistId');
+        const isShort = formData.get('isShort') === 'true';
 
         if (!title || !description || !videoId) {
             return NextResponse.json({ message: "Title, description, and videoId are required." }, { status: 400 });
@@ -41,6 +42,7 @@ export async function POST(request) {
             category: category,
             tags: tags,
             visibility: visibility,
+            isShort: isShort,
         };
 
         if (thumbnailFile) {

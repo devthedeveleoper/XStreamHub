@@ -15,9 +15,9 @@ import VideoThumbnail from "@/components/VideoThumbnail";
 import EditVideoModal from "@/components/EditVideoModal";
 import ChangeThumbnailModal from "@/components/ChangeThumbnailModal";
 import { toast } from "react-toastify";
-import { MdOutlineAddPhotoAlternate, MdInsights, MdVideoLibrary } from "react-icons/md";
+import { MdOutlineAddPhotoAlternate, MdInsights, MdVideoLibrary, MdClose } from "react-icons/md";
 import { IoMdLink, IoIosLock, IoIosGlobe } from "react-icons/io";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 
 const VisibilityDropdown = ({ video, onVisibilityChange }) => {
@@ -95,9 +95,10 @@ const DashboardClient = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
-  const [activeTab, setActiveTab] = useState("analytics"); // 'analytics' | 'content'
+  const [activeTab, setActiveTab] = useState("content"); // 'analytics' | 'content'
   const [editingVideo, setEditingVideo] = useState(null);
   const [changingThumbnailVideo, setChangingThumbnailVideo] = useState(null);
+  const [selectedVideos, setSelectedVideos] = useState([]);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -181,6 +182,49 @@ const DashboardClient = () => {
     setChangingThumbnailVideo(null);
   };
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked && videos) {
+      setSelectedVideos(videos.map((v) => v._id));
+    } else {
+      setSelectedVideos([]);
+    }
+  };
+
+  const handleSelectVideo = (videoId) => {
+    setSelectedVideos((prev) =>
+      prev.includes(videoId) ? prev.filter((id) => id !== videoId) : [...prev, videoId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedVideos.length} videos?`)) return;
+    try {
+      await API.delete('/videos/bulk', { data: { videoIds: selectedVideos } });
+      mutate(
+        videos.filter((v) => !selectedVideos.includes(v._id)),
+        false
+      );
+      setSelectedVideos([]);
+      toast.success("Videos deleted successfully!");
+    } catch (err) {
+      toast.error("Failed to delete videos.");
+    }
+  };
+
+  const handleBulkVisibility = async (newVisibility) => {
+    try {
+      await API.put('/videos/bulk', { videoIds: selectedVideos, visibility: newVisibility });
+      mutate(
+        videos.map((v) => (selectedVideos.includes(v._id) ? { ...v, visibility: newVisibility } : v)),
+        false
+      );
+      setSelectedVideos([]);
+      toast.success(`Videos marked as ${newVisibility}!`);
+    } catch (err) {
+      toast.error("Failed to update visibility.");
+    }
+  };
+
   if (status === "loading" || isLoading || analyticsLoading) {
     return (
       <main className="container mx-auto px-4 sm:px-6 py-10 max-w-7xl animate-pulse">
@@ -217,7 +261,7 @@ const DashboardClient = () => {
         />
       )}
 
-      <main className="container mx-auto px-4 sm:px-6 py-10 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-10 max-w-7xl relative">
         <div className="flex flex-col md:flex-row gap-8">
           
           {/* SIDEBAR NAVIGATION */}
@@ -296,8 +340,42 @@ const DashboardClient = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden flex flex-col transition-colors">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden flex flex-col transition-colors relative">
                   
+                  {/* Bulk Actions Bar */}
+                  <AnimatePresence>
+                    {selectedVideos.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="absolute top-0 left-0 right-0 z-10 bg-indigo-600 dark:bg-indigo-500 text-white p-4 flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-4">
+                          <button onClick={() => setSelectedVideos([])} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                            <MdClose size={20} />
+                          </button>
+                          <span className="font-semibold">{selectedVideos.length} selected</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <div className="relative group">
+                              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors">
+                                Set Visibility
+                              </button>
+                              <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 hidden group-hover:block overflow-hidden z-30 text-gray-800 dark:text-gray-200">
+                                <button onClick={() => handleBulkVisibility('public')} className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">Public</button>
+                                <button onClick={() => handleBulkVisibility('unlisted')} className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">Unlisted</button>
+                                <button onClick={() => handleBulkVisibility('private')} className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">Private</button>
+                              </div>
+                           </div>
+                           <button onClick={handleBulkDelete} className="px-4 py-2 bg-rose-500 hover:bg-rose-400 rounded-xl text-sm font-medium transition-colors">
+                              Delete
+                           </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Content Header & Search */}
                   <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white font-display tracking-tight">Channel Content</h2>
@@ -327,6 +405,14 @@ const DashboardClient = () => {
                     <table className="min-w-full divide-y divide-gray-100 dark:divide-slate-800">
                       <thead className="bg-gray-50/50 dark:bg-slate-800/30">
                         <tr>
+                          <th className="px-6 py-4 text-left w-12">
+                             <input 
+                                type="checkbox" 
+                                onChange={handleSelectAll} 
+                                checked={videos?.length > 0 && selectedVideos.length === videos.length} 
+                                className="rounded border-gray-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800 h-4 w-4 cursor-pointer" 
+                              />
+                          </th>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider font-display">Thumbnail</th>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider font-display">Video</th>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider font-display">Visibility</th>
@@ -337,10 +423,19 @@ const DashboardClient = () => {
                       </thead>
                       <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-50 dark:divide-slate-800/50">
                         {error ? (
-                           <tr><td colSpan="6" className="p-8 text-center text-rose-500">Failed to load content.</td></tr>
+                           <tr><td colSpan="7" className="p-8 text-center text-rose-500">Failed to load content.</td></tr>
                         ) : videos && videos.length > 0 ? (
                           videos.map((video) => (
-                            <tr key={video._id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                            <tr key={video._id} className={`hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors group ${selectedVideos.includes(video._id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+                              <td className="px-6 py-4 whitespace-nowrap w-12">
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedVideos.includes(video._id)} 
+                                  onChange={() => handleSelectVideo(video._id)} 
+                                  className="rounded border-gray-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800 h-4 w-4 cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                  style={{ opacity: selectedVideos.includes(video._id) ? 1 : undefined }}
+                                />
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="relative w-32 aspect-video rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
                                   <VideoThumbnail
@@ -396,7 +491,7 @@ const DashboardClient = () => {
                         ) : (
                           <tr>
                             <td
-                              colSpan="6"
+                              colSpan="7"
                               className="px-6 py-16 text-center text-gray-500 dark:text-gray-400"
                             >
                               <div className="flex flex-col items-center justify-center">

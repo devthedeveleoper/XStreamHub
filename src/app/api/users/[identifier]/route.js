@@ -16,7 +16,6 @@ export async function GET(request, { params }) {
     const cachedProfile = await redis.get(cacheKey);
 
     if (cachedProfile) {
-      console.log(`CACHE HIT for key: ${cacheKey}`);
       const profileData = cachedProfile;
 
       const session = await getServerSession(authOptions);
@@ -28,8 +27,6 @@ export async function GET(request, { params }) {
 
       return NextResponse.json(profileData);
     }
-
-    console.log(`CACHE MISS for key: ${cacheKey}`);
 
     await dbConnect();
 

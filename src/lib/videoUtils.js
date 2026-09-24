@@ -20,7 +20,34 @@ export const buildVideoAggregation = (
     {
       $addFields: {
         commentCount: { $size: "$comments" },
+        hoursSinceUpload: {
+            $divide: [
+                { $subtract: [new Date(), "$createdAt"] },
+                3600000 // milliseconds in an hour
+            ]
+        }
       },
+    },
+    {
+        $addFields: {
+            trendingScore: {
+                $divide: [
+                    {
+                        $add: [
+                            "$views",
+                            { $multiply: ["$likesCount", 5] },
+                            { $multiply: ["$commentCount", 10] }
+                        ]
+                    },
+                    {
+                        $pow: [
+                            { $add: ["$hoursSinceUpload", 2] },
+                            1.5
+                        ]
+                    }
+                ]
+            }
+        }
     },
     { $sort: sortCriteria },
     {
@@ -44,6 +71,7 @@ export const buildVideoAggregation = (
         likesCount: 1,
         commentCount: 1,
         likes: 1,
+        trendingScore: 1,
         "uploader.username": "$uploaderInfo.username",
         "uploader._id": "$uploaderInfo._id",
         "uploader.avatar": "$uploaderInfo.avatar",

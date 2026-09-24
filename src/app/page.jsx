@@ -1,14 +1,14 @@
 import React, { Suspense } from 'react';
-import HomePageClient from '@/components/HomePageClient';
+import TrendingFeedClient from '@/components/TrendingFeedClient';
 
 const HomePageLoading = () => {
-    return <div className="text-center p-10">Loading videos...</div>;
+    return <div className="text-center p-10 text-gray-500 dark:text-gray-400 font-medium">Loading videos...</div>;
 };
 
 const HomePage = () => {
   return (
     <Suspense fallback={<HomePageLoading />}>
-      <HomePageClient />
+      <TrendingFeedClient />
     </Suspense>
   );
 };

@@ -55,6 +55,7 @@ export const useVideoUpload = () => {
     }
     const tagsArray = data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     finalFormData.append("tags", JSON.stringify(tagsArray));
+    finalFormData.append("isShort", Boolean(data.isShort));
 
     if (thumbnailFile) {
       finalFormData.append("thumbnailFile", thumbnailFile);
@@ -119,7 +120,6 @@ export const useVideoUpload = () => {
             uploadedBytes += chunk.size;
           } catch (err) {
             attempt++;
-            console.warn(`Chunk ${chunkIndex} failed (Attempt ${attempt}/3)`);
             if (attempt >= 3) {
               throw new Error(`Failed to upload chunk ${chunkIndex} after 3 attempts`);
             }

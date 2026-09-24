@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 
-const AURA_API_BASE_URL = "https://api.aurahub.fun";
+const AURA_API_BASE_URL = "https://aurahub-api.ashwathama249.workers.dev";
 const UPLOAD_FOLDER_ID = process.env.UPLOAD_FOLDER_ID;
 
 export async function GET(request) {

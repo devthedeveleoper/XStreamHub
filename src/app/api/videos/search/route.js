@@ -19,11 +19,8 @@ export async function GET(request) {
 
         const cachedResults = await redis.get(cacheKey);
         if (cachedResults) {
-            console.log(`CACHE HIT for key: ${cacheKey}`);
             return NextResponse.json(cachedResults);
         }
-
-        console.log(`CACHE MISS for key: ${cacheKey}`);
 
         await dbConnect();
 

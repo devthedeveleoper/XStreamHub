@@ -6,7 +6,7 @@ import Notification from '@/models/Notification';
 import mongoose from 'mongoose';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import eventEmitter from "@/lib/eventEmitter";
+import { sendRealtimeNotification } from "@/lib/notifier";
 export async function GET(request, { params }) {
     await dbConnect();
     try {
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   await dbConnect();
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { message: "Invalid video ID format." },
@@ -80,7 +80,7 @@ export async function POST(request, { params }) {
         .populate("sender", "username avatar")
         .populate("video", "title");
 
-      eventEmitter.emit("newNotification", populatedNotif);
+      sendRealtimeNotification(video.uploader, populatedNotif);
     }
 
     if (parentCommentId) {
@@ -104,7 +104,7 @@ export async function POST(request, { params }) {
           .populate("sender", "username avatar")
           .populate("video", "title");
 
-        eventEmitter.emit("newNotification", populatedReplyNotif);
+        sendRealtimeNotification(parentComment.author, populatedReplyNotif);
       }
     }
 

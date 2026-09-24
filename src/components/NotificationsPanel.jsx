@@ -21,36 +21,69 @@ const NotificationsPanel = () => {
 
   const socketRef = useRef(null);
 
-  console.log(notifications)
-
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
     API.get("/notifications").then((res) => {
-      setNotifications(res.data.notifications);
-      setUnreadCount(res.data.unreadCount);
+      setNotifications(res.data.notifications || []);
+      setUnreadCount(res.data.unreadCount || 0);
     });
 
-    const eventSource = new EventSource('/api/notifications/stream');
+    let isMounted = true;
+    let ws = null;
+    let reconnectTimer = null;
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'connected') {
-        console.log("Connected to Next.js SSE notification server!");
-      } else {
-        setNotifications((prev) => [data, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-        toast.info(`New notification from ${data.sender.username}!`);
+    const connectWebSocket = () => {
+      if (!isMounted) return;
+
+      const serverUrl =
+        process.env.NEXT_PUBLIC_NOTIFICATION_SERVER_URL ||
+        "https://aurahub-go-notifier.onrender.com";
+      const wsUrl = `${serverUrl.replace(/^http/, "ws")}/ws?userId=${user.id}`;
+
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && data._id) {
+              setNotifications((prev) => [data, ...prev]);
+              setUnreadCount((prev) => prev + 1);
+              if (data?.sender?.username) {
+                toast.info(`New notification from ${data.sender.username}!`);
+              }
+            }
+          } catch {
+            // Ignore non-JSON heartbeat
+          }
+        };
+
+        ws.onerror = () => {
+          // Handled by onclose
+        };
+
+        ws.onclose = () => {
+          if (isMounted) {
+            reconnectTimer = setTimeout(connectWebSocket, 5000);
+          }
+        };
+      } catch {
+        if (isMounted) {
+          reconnectTimer = setTimeout(connectWebSocket, 5000);
+        }
       }
     };
 
-    eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      eventSource.close();
-    };
-    
+    connectWebSocket();
+
     return () => {
-      eventSource.close();
+      isMounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
     };
   }, [isAuthenticated, user]);
 

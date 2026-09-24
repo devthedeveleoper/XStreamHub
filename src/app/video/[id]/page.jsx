@@ -38,8 +38,9 @@ export async function generateMetadata({ params }) {
   }
 }
 
-const VideoPlayerPage = ({ params }) => {
-  return <VideoPlayerPageClient params={params} />;
+const VideoPlayerPage = async ({ params }) => {
+  await params; // params is a Promise in Next.js 15+; client uses useParams() directly
+  return <VideoPlayerPageClient />;
 };
 
 export default VideoPlayerPage;

@@ -7,7 +7,7 @@ import os from 'os';
 import axios from 'axios';
 import FormData from 'form-data';
 
-const AURA_API_BASE_URL = "https://api.aurahub.fun";
+const AURA_API_BASE_URL = "https://aurahub-api.ashwathama249.workers.dev";
 const UPLOAD_FOLDER_ID = process.env.UPLOAD_FOLDER_ID;
 
 export async function POST(request) {

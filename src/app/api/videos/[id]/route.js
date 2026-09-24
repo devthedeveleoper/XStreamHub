@@ -9,7 +9,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import redis from '@/lib/redis';
 
-const AURA_API_BASE_URL = "https://api.aurahub.fun";
+const AURA_API_BASE_URL = "https://aurahub-api.ashwathama249.workers.dev";
 
 export async function GET(request, { params }) {
   await dbConnect();
@@ -23,7 +23,6 @@ export async function GET(request, { params }) {
 
     const cachedVideo = await redis.get(cacheKey);
     if (cachedVideo) {
-      console.log(`CACHE HIT for key: ${cacheKey}`);
       const videoObject = cachedVideo;
       const session = await getServerSession(authOptions);
       const user = session?.user;
@@ -35,8 +34,6 @@ export async function GET(request, { params }) {
       return NextResponse.json(videoObject);
     }
     
-    console.log(`CACHE MISS for key: ${cacheKey}`);
-
     await dbConnect();
 
     const video = await Video.findById(id);
